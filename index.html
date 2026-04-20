@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDFR Clinical Operations Portal</title>
+    <style>
+        :root {
+            --mdfr-blue-dark: #0369a1;
+            --mdfr-blue-mid: #0ea5e9;
+            --mdfr-blue-light: #f0f9ff;
+            --mdfr-blue-accent: #bae6fd;
+            --white: #ffffff;
+            --text-dark: #0f172a;
+            --text-gray: #475569;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--mdfr-blue-light);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header-guide {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 12px;
+            font-weight: 900;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto 0 auto;
+            display: grid;
+            grid-template-columns: 480px 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--white);
+            border-top: 6px solid var(--mdfr-blue-mid);
+            border-radius: 4px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        h2 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 15px 0;
+            color: var(--mdfr-blue-dark);
+            border-bottom: 2px solid var(--mdfr-blue-light);
+            padding-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .section-box {
+            background: #fff;
+            border: 1px solid var(--mdfr-blue-accent);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .check-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
+        }
+
+        .check-item input { margin-right: 6px; accent-color: var(--mdfr-blue-mid); }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        label { font-size: 9px; font-weight: 900; color: var(--text-gray); margin-bottom: 4px; display: block; }
+        
+        input[type="number"] {
+            width: 100%; padding: 8px; border: 1px solid var(--mdfr-blue-accent); border-radius: 4px; font-size: 13px; box-sizing: border-box;
+            background: var(--white);
+        }
+
+        .btn-action {
+            width: 100%; background: var(--mdfr-blue-mid); color: white; padding: 16px; border: none;
+            border-radius: 4px; font-weight: 800; cursor: pointer; text-transform: uppercase;
+            border-bottom: 4px solid var(--mdfr-blue-dark); transition: 0.1s;
+        }
+
+        .btn-action:hover { background: var(--mdfr-blue-dark); }
+        .btn-action:active { border-bottom: none; transform: translateY(2px); }
+
+        .protocol-box {
+            margin-bottom: 20px; padding: 20px; border-left: 5px solid var(--mdfr-blue-accent); background: #fff;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .med-box {
+            margin-top: 10px; padding: 15px; background: #f8fafc; border: 1px dashed var(--mdfr-blue-mid); border-radius: 4px;
+        }
+
+        .protocol-title { font-weight: 900; font-size: 14px; margin-bottom: 10px; color: var(--mdfr-blue-dark); border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .sub-title { font-weight: 800; font-size: 11px; color: #64748b; text-transform: uppercase; margin-top: 10px; margin-bottom: 5px; display: block; text-decoration: underline; }
+        
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { margin-bottom: 8px; font-size: 13px; line-height: 1.4; color: #334155; }
+        
+        .med-push { font-weight: 800; color: #0369a1; background: #e0f2fe; padding: 2px 4px; border-radius: 2px; }
+        .rp-action { font-style: italic; color: #0891b2; font-weight: 500; }
+
+    </style>
+</head>
+<body>
+
+<div class="header-guide">ALS Roleplay Guide</div>
+
+<div class="container">
+    <div class="card">
+        <h2>Field Assessment (MDFR EMS)</h2>
+        
+        <div class="section-box">
+            <label>TRAUMA / CRITICAL CARE</label>
+            <div class="check-grid" id="trauma_list">
+                <label class="check-item"><input type="checkbox" value="arrest"> Cardiac Arrest</label>
+                <label class="check-item"><input type="checkbox" value="chest_pain"> Chest Pain (AMI)</label>
+                <label class="check-item"><input type="checkbox" value="gsw_torso"> GSW Torso</label>
+                <label class="check-item"><input type="checkbox" value="gsw_limb"> GSW Limb</label>
+                <label class="check-item"><input type="checkbox" value="evisceration"> Evisceration</label>
+                <label class="check-item"><input type="checkbox" value="burns"> Burns (Major)</label>
+                <label class="check-item"><input type="checkbox" value="flail_chest"> Flail Chest</label>
+                <label class="check-item"><input type="checkbox" value="open_fx"> Open FX</label>
+                <label class="check-item"><input type="checkbox" value="broken_limb"> Broken Limb</label>
+                <label class="check-item"><input type="checkbox" value="laceration"> Laceration</label>
+                <label class="check-item"><input type="checkbox" value="massive_bleed"> Massive Bleed</label>
+                <label class="check-item"><input type="checkbox" value="seizure"> Seizure</label>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <label>AIRWAY & RESPIRATORY</label>
+            <div class="check-grid" id="resp_list">
+                <label class="check-item"><input type="checkbox" value="blocked_airway"> Blocked Airway</label>
+                <label class="check-item"><input type="checkbox" value="coll_airway"> Collapsed Airway</label>
+                <label class="check-item"><input type="checkbox" value="coll_lung"> Collapsed Lung</label>
+                <label class="check-item"><input type="checkbox" value="tension"> Tension Pneumo</label>
+                <label class="check-item"><input type="checkbox" value="unconscious"> GCS < 8</label>
+                <label class="check-item"><input type="checkbox" value="iv_fail"> IV Unfeasible</label>
+            </div>
+        </div>
+
+        <div class="vitals-grid">
+            <div><label>PULSE</label><input type="number" id="pulse" placeholder="BPM"></div>
+            <div><label>BP (SYS)</label><input type="number" id="bp" placeholder="mmHg"></div>
+            <div><label>RR</label><input type="number" id="rr" placeholder="BPM"></div>
+            <div><label>SPO2</label><input type="number" id="spo2" placeholder="%"></div>
+            <div><label>BGL</label><input type="number" id="bgl" placeholder="mg/dL"></div>
+            <div><label>TEMP</label><input type="number" id="temp" placeholder="°F"></div>
+        </div>
+
+        <button class="btn-action" onclick="generatePlan()">Process Protocols</button>
+    </div>
+
+    <div class="card" id="output">
+        <h2 style="color: var(--mdfr-blue-dark);">MDFR Clinical Treatment Plan</h2>
+        <div style="text-align: center; padding-top: 100px; color: var(--text-gray);">
+            Awaiting full vital sign entry and assessment data.
+        </div>
+    </div>
+</div>
+
+<script>
+    function generatePlan() {
+        const output = document.getElementById('output');
+        const v = {
+            pulse: document.getElementById('pulse').value,
+            bp: document.getElementById('bp').value,
+            rr: document.getElementById('rr').value,
+            spo2: document.getElementById('spo2').value,
+            bgl: document.getElementById('bgl').value,
+            temp: document.getElementById('temp').value
+        };
+
+        if (!v.pulse || !v.bp || !v.rr || !v.spo2 || !v.bgl || !v.temp) {
+            output.innerHTML = `
+                <h2 style="color: var(--mdfr-blue-dark);">MDFR Clinical Treatment Plan</h2>
+                <div class="protocol-box">
+                    <div class="protocol-title">Vital Sign Error</div>
+                    <ul><li>• INCOMPLETE VITALS: YOU MUST ENTER ALL VITAL SIGNS BEFORE PROCESSING.</li></ul>
+                </div>
+            `;
+            return;
+        }
+
+        const trauma = Array.from(document.querySelectorAll('#trauma_list input:checked')).map(i => i.value);
+        const resp = Array.from(document.querySelectorAll('#resp_list input:checked')).map(i => i.value);
+
+        let html = '';
+        let medRecs = [];
+
+        const isTraumaticArrest = (parseInt(v.pulse) === 0 || trauma.includes('arrest')) && (trauma.includes('gsw_torso') || trauma.includes('massive_bleed') || trauma.includes('gsw_limb'));
+
+        // Trauma & Hemorrhage Control Section
+        if (trauma.some(r => ['gsw_torso', 'gsw_limb', 'massive_bleed', 'evisceration', 'laceration'].includes(r))) {
+            let traumaHtml = `<div class="protocol-box"><div class="protocol-title">Trauma & Hemorrhage Control</div><ul>`;
+            
+            if (isTraumaticArrest) traumaHtml += `<li><span class='med-push'>PRIORITY:</span> Addressing reversible trauma causes is MORE IMPORTANT than ACLS compressions.</li>`;
+
+            if (trauma.includes('gsw_torso')) {
+                traumaHtml += `<span class='sub-title'>Torso Trauma</span>`;
+                traumaHtml += `<li>• Check for EXIT WOUNDS <span class='rp-action'>(-Rolls patient-)</span>.</li>`;
+                traumaHtml += `<li>• Apply <span class='med-push'>Occlusive Gauze (Chest Seal)</span> to all wounds.</li>`;
+            }
+
+            if (trauma.includes('gsw_limb') || trauma.includes('massive_bleed')) {
+                traumaHtml += `<span class='sub-title'>Hemorrhage Control</span>`;
+                traumaHtml += `<li>• Apply TQ high and tight for arterial limb bleeds.</li>`;
+                traumaHtml += `<li>• Pack cavity wounds with <span class='med-push'>Hemostatic Packing Gauze (QuikClot)</span>.</li>`;
+            }
+
+            if (trauma.includes('evisceration')) {
+                traumaHtml += `<span class='sub-title'>Evisceration</span>`;
+                traumaHtml += `<li>• Cover exposed organs with <span class='med-push'>Moist Sterile Gauze</span> and occlusive dressing.</li>`;
+            }
+
+            if (trauma.includes('laceration')) {
+                traumaHtml += `<span class='sub-title'>Laceration</span>`;
+                traumaHtml += `<li>• Irrigate wound with NS and apply <span class='med-push'>Pressure Dressing</span> <span class='rp-action'>(-Binds wound-)</span>.</li>`;
+            }
+
+            traumaHtml += `<span class='sub-title'>Circulation Support</span>`;
+            traumaHtml += `<li>• <span class='med-push'>Push TXA 1g in 100ml NS</span> over 10 mins.</li>`;
+            medRecs.push("TXA 1g (over 10m)");
+
+            if (parseInt(v.bp) < 90 || isTraumaticArrest) {
+                traumaHtml += `<li>• Initiate Whole Blood transfusion via 14g IV.</li>`;
+                traumaHtml += `<li>• Warm patient immediately with blankets to prevent hypothermia <span class='rp-action'>(-Wraps patient-)</span>.</li>`;
+                traumaHtml += `<li>• <span class='med-push'>Push Calcium Gluconate 1g IV/IO</span>.</li>`;
+                medRecs.push("Whole Blood", "Calcium Gluconate 1g");
+            }
+
+            traumaHtml += `</ul></div>`;
+            html += traumaHtml;
+        }
+
+        // Cardiac Arrest (ACLS) Protocol
+        if (parseInt(v.pulse) === 0 || trauma.includes('arrest')) {
+            html += renderBlock("Cardiac Arrest (ACLS) Protocol", [
+                "• Initiate high-quality chest compressions at 100-120 BPM.",
+                "• Attach AED/Monitor pads to bare chest <span class='rp-action'>(-Applies pads-)</span>.",
+                "• <span class='med-push'>Push Epinephrine 1mg IV</span> of 1:10,000 every 3-5 mins.",
+                "• IF SHOCKABLE (VF/VT): Defibrillate and resume CPR immediately.",
+                "• IF NON-SHOCKABLE (Asystole/PEA): Do not shock. Continue CPR."
+            ]);
+            medRecs.push("Epinephrine 1:10,000 (1mg)");
+        }
+
+        // Airway & Respiratory Management
+        if (resp.length > 0 || trauma.includes('burns') || trauma.includes('flail_chest')) {
+            let respHtml = `<div class="protocol-box"><div class="protocol-title">Airway & Respiratory Management</div><ul>`;
+            
+            if (trauma.includes('burns')) {
+                respHtml += `<span class='sub-title'>Major Burns</span>`;
+                respHtml += `<li>• Cover burns with <span class='med-push'>Dry Sterile Dressing</span> and initiate fluid resuscitation.</li>`;
+            }
+            if (trauma.includes('flail_chest')) {
+                respHtml += `<span class='sub-title'>Flail Chest</span>`;
+                respHtml += `<li>• Stabilize flail segment with bulky dressing <span class='rp-action'>(-Secures segment-)</span>.</li>`;
+            }
+            if (resp.includes('blocked_airway')) {
+                respHtml += `<span class='sub-title'>Airway Obstruction</span>`;
+                respHtml += `<li>• Use forceps for solids in airway <span class='rp-action'>(-Clears airway-)</span>.</li>`;
+            }
+            if (resp.includes('coll_lung') || resp.includes('tension')) {
+                respHtml += `<span class='sub-title'>Tension Pneumothorax</span>`;
+                respHtml += `<li>• Perform Needle Decompression at 2nd ICS <span class='rp-action'>(-Relieves pressure-)</span>.</li>`;
+            }
+            if (resp.includes('coll_airway') || resp.includes('unconscious')) {
+                respHtml += `<span class='sub-title'>Advanced Airway Control</span>`;
+                respHtml += `<li>• <span class='med-push'>Push Etomidate 20mg</span> and <span class='med-push'>Rocuronium 100mg</span> for RSI.</li>`;
+                respHtml += `<li>• Perform Endotracheal Intubation and confirm with ETCO2 <span class='rp-action'>(-Inserts ET tube-)</span>.</li>`;
+                medRecs.push("Etomidate 20mg", "Rocuronium 100mg");
+            }
+            if (resp.includes('iv_fail')) {
+                respHtml += `<span class='sub-title'>Failed Access</span>`;
+                respHtml += `<li>• IV access failed. Transition to Hummer IO/Bone Injection immediately.</li>`;
+            }
+            respHtml += `</ul></div>`;
+            html += respHtml;
+        }
+
+        // Cardiac Chest Pain Protocol
+        if (trauma.includes('chest_pain')) {
+            html += renderBlock("Cardiac Chest Pain / AMI Protocol", [
+                "• Obtain 12-lead EKG <span class='rp-action'>(-Attaches leads-)</span>.",
+                "• <span class='med-push'>Administer 324mg Aspirin</span> PO.",
+                parseInt(v.bp) > 100 ? "• <span class='med-push'>Administer 0.4mg Nitroglycerin SL</span>." : "• Nitroglycerin withheld due to hypotension."
+            ]);
+            medRecs.push("ASA 324mg", "Nitroglycerin 0.4mg");
+        }
+
+        // Orthopedic Protocol
+        if (trauma.includes('broken_limb') || trauma.includes('open_fx')) {
+            let orthoSteps = ["• Splint in position of comfort <span class='rp-action'>(-Splints limb-)</span>."];
+            if (trauma.includes('open_fx')) {
+                orthoSteps.push("• <span class='med-push'>Push Ketamine 50mg IV/IO</span> for severe trauma pain.");
+                orthoSteps.push("• <span class='med-push'>Push Ancef 2g</span> for prehospital ABX prophylaxis.");
+                medRecs.push("Ketamine 50mg", "Ancef 2g");
+            } else {
+                orthoSteps.push("• <span class='med-push'>Push Fentanyl 100mcg</span> for analgesia.");
+                medRecs.push("Fentanyl 100mcg");
+            }
+            html += renderBlock("Orthopedic Protocol", orthoSteps);
+        }
+
+        // Seizure Protocol
+        if (trauma.includes('seizure')) {
+            html += renderBlock("Seizure Protocol", [
+                "• Protect patient from injury and place on side.",
+                "• <span class='med-push'>Administer Versed 5mg IV</span> or 10mg IM."
+            ]);
+            medRecs.push("Versed 5mg (Midazolam)");
+        }
+
+        // Metabolic Management (BGL)
+        if (parseInt(v.bgl) < 70) {
+            html += renderBlock("Hypoglycemia Protocol", ["• <span class='med-push'>Push Dextrose 10% (D10W) 250mL</span> IV bag."]);
+            medRecs.push("Dextrose 10% (D10W)");
+        } else if (parseInt(v.bgl) > 250) {
+            html += renderBlock("Hyperglycemia Protocol", [
+                "• Administer 1L NS fluid bolus for dehydration.",
+                "• <span class='med-push'>Administer 10 Units Regular Insulin IV</span>."
+            ]);
+            medRecs.push("NS 1L Bolus", "Regular Insulin 10U");
+        }
+
+        // Medication Box
+        if (medRecs.length > 0) {
+            html += `
+                <div class="med-box">
+                    <div class="protocol-title" style="color: #000; border-bottom: 1px solid #ccc;">Vital-Based Medication Recommendations</div>
+                    <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                        ${medRecs.map(m => `<li>• <b>${m}</b></li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        output.innerHTML = `<h2 style="color: var(--mdfr-blue-dark);">MDFR Clinical Treatment Plan</h2>` + (html || '<div style="text-align: center; padding-top: 100px; color: var(--text-gray);">No specific protocols triggered. Check vitals.</div>');
+    }
+
+    function renderBlock(title, steps) {
+        return `<div class="protocol-box"><div class="protocol-title">${title}</div><ul>${steps.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
+    }
+</script>
+
+</body>
+</html>
