@@ -1,647 +1,832 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDFR Clinical Operations Portal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --blue-dark:#0369a1;--blue-mid:#0ea5e9;--blue-soft:#38bdf8;--blue-light:#f0f9ff;
-            --blue-accent:#bae6fd;--blue-tint:#e0f2fe;--white:#ffffff;--surface:#f8fafc;
-            --text-dark:#0f172a;--text-mid:#334155;--text-gray:#64748b;--text-light:#94a3b8;
-            --border:#e2e8f0;--border-blue:#bae6fd;--red:#dc2626;--amber:#d97706;
-            --sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
-        }
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:var(--sans);background:var(--blue-light);color:var(--text-dark);min-height:100vh}
-        .topbar{background:var(--white);border-bottom:3px solid var(--blue-mid);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(0,0,0,.06);position:sticky;top:0;z-index:100}
-        .topbar-left{display:flex;align-items:center;gap:14px}
-        .topbar-logo{background:var(--blue-mid);color:white;width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:600;font-size:12px}
-        .topbar-name{font-weight:700;font-size:14px;color:var(--text-dark)}
-        .topbar-name span{color:var(--blue-mid)}
-        .topbar-badge{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--blue-dark);background:var(--blue-tint);border:1px solid var(--blue-accent);border-radius:4px;padding:3px 9px;letter-spacing:.08em;text-transform:uppercase}
-        .container{max-width:1440px;margin:0 auto;padding:22px;display:grid;grid-template-columns:460px 1fr;gap:18px;align-items:start}
-        .card{background:var(--white);border-radius:8px;border:1px solid var(--border);border-top:4px solid var(--blue-mid);box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden}
-        .card-header{background:var(--surface);border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:9px}
-        .card-header-dot{width:8px;height:8px;border-radius:50%;background:var(--blue-mid)}
-        .card-header h2{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-dark);border:none;padding:0;margin:0}
-        .card-body{padding:20px}
-        .field-group{margin-bottom:18px}
-        .group-label{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--text-light);margin-bottom:9px;display:flex;align-items:center;gap:8px}
-        .group-label::after{content:'';flex:1;height:1px;background:var(--border)}
-        .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-        .check-item{display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text-mid);transition:all .12s;user-select:none}
-        .check-item:hover{border-color:var(--blue-mid);background:var(--blue-tint);color:var(--blue-dark)}
-        .check-item:has(input:checked){border-color:var(--blue-mid);background:var(--blue-tint);color:var(--blue-dark)}
-        .check-item input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:14px;height:14px;border:1.5px solid var(--text-light);border-radius:3px;flex-shrink:0;cursor:pointer;position:relative;transition:all .12s}
-        .check-item input[type="checkbox"]:checked{background:var(--blue-mid);border-color:var(--blue-mid)}
-        .check-item input[type="checkbox"]:checked::after{content:'';position:absolute;left:2px;top:0;width:5px;height:8px;border:2px solid white;border-top:none;border-left:none;transform:rotate(45deg)}
-        .vitals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px}
-        .vital-field label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-gray);display:block;margin-bottom:4px}
-        .vital-field input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text-dark);background:var(--white);outline:none;transition:border-color .12s,box-shadow .12s}
-        .vital-field input::placeholder{color:var(--text-light);font-size:11px}
-        .vital-field input:focus{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
-        input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
-        .btn-process{width:100%;padding:13px;background:var(--blue-mid);color:white;font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:none;border-bottom:3px solid var(--blue-dark);border-radius:6px;cursor:pointer;transition:all .1s}
-        .btn-process:hover{background:var(--blue-dark)}
-        .btn-process:active{transform:translateY(2px);border-bottom-width:1px}
-        .output-idle{text-align:center;padding:90px 30px;color:var(--text-light)}
-        .output-idle p{font-size:12px;letter-spacing:.03em;line-height:1.7}
-        .error-box{background:#fef2f2;border:1px solid #fecaca;border-left:3px solid var(--red);border-radius:6px;padding:14px 16px;font-size:12px;color:#991b1b;font-weight:600}
-        .protocol-block{border:1px solid var(--border-blue);border-left:4px solid var(--blue-mid);border-radius:6px;margin-bottom:12px;overflow:hidden;animation:slideIn .2s ease}
-        .protocol-block.critical{border-left-color:var(--red)}
-        .protocol-block.alert{border-left-color:var(--amber)}
-        @keyframes slideIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-        .protocol-header{background:var(--surface);border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;justify-content:space-between}
-        .protocol-title{font-size:12px;font-weight:700;color:var(--text-dark)}
-        .proto-tag{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px}
-        .tag-critical{background:#fee2e2;color:var(--red)}
-        .tag-alert{background:#fef3c7;color:var(--amber)}
-        .tag-std{background:var(--blue-tint);color:var(--blue-dark)}
-        .protocol-body{padding:12px 14px}
-        .sub-label{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-gray);padding-bottom:5px;margin-top:10px;margin-bottom:4px;border-bottom:1px solid var(--border);display:block}
-        .step{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12.5px;color:var(--text-mid);line-height:1.5}
-        .step::before{content:'>';color:var(--blue-mid);font-weight:700;font-size:14px;flex-shrink:0;line-height:1.3}
-        .pill{display:inline;font-family:var(--mono);font-size:10.5px;font-weight:500;background:var(--blue-tint);color:var(--blue-dark);border:1px solid var(--blue-accent);border-radius:3px;padding:0 4px}
-        .rp-note{font-style:italic;color:var(--blue-soft);font-size:11px}
-        .med-table-wrap{margin-top:6px;border:1px solid var(--border-blue);border-top:3px solid var(--blue-dark);border-radius:6px;overflow:hidden;animation:slideIn .3s ease}
-        .med-table-header{background:var(--blue-dark);padding:11px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-        .med-table-header h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:white}
-        .med-count-badge{background:rgba(255,255,255,.2);color:white;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
-        .med-legend{font-size:10px;color:rgba(255,255,255,.75);margin-left:auto;font-style:italic}
-        .med-legend-dot{display:inline-block;width:8px;height:8px;background:#fca5a5;border-radius:2px;margin-right:4px;vertical-align:middle}
-        table{width:100%;border-collapse:collapse;font-size:12px}
-        thead tr{background:var(--blue-tint)}
-        th{text-align:left;padding:8px 12px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue-dark);border-bottom:1px solid var(--border-blue)}
-        tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
-        tbody tr:last-child{border-bottom:none}
-        tbody tr:hover{background:var(--surface)}
-        td{padding:9px 12px;vertical-align:top;color:var(--text-mid);line-height:1.45}
-        td:first-child{font-weight:700;color:var(--text-dark);white-space:nowrap}
-        .dose-cell{font-family:var(--mono);font-size:11px;color:var(--blue-dark);font-weight:600}
-        .route-badge{display:inline-block;font-size:9px;font-weight:700;background:var(--blue-tint);color:var(--blue-dark);border:1px solid var(--blue-accent);border-radius:3px;padding:1px 5px;letter-spacing:.05em;white-space:nowrap}
-        .notes-cell{font-size:11px;color:var(--text-gray);font-style:italic}
-        .reason-cell{font-size:11px;color:var(--blue-dark);font-weight:600}
-        .priority-high{background:#fff8f8}
-        .priority-high td:first-child{color:var(--red)}
-        .priority-high .reason-cell{color:var(--red)}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MDFR Clinical Operations Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--blue-dark:#0369a1;--blue-mid:#0ea5e9;--blue-soft:#38bdf8;--blue-light:#f0f9ff;--blue-accent:#bae6fd;--blue-tint:#e0f2fe;--white:#ffffff;--surface:#f8fafc;--text-dark:#0f172a;--text-mid:#334155;--text-gray:#64748b;--text-light:#94a3b8;--border:#e2e8f0;--border-blue:#bae6fd;--red:#dc2626;--amber:#d97706;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--blue-light);color:var(--text-dark);min-height:100vh}
+.topbar{background:var(--white);border-bottom:3px solid var(--blue-mid);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(0,0,0,.06);position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.topbar-logo{background:var(--blue-mid);color:white;width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:600;font-size:12px}
+.topbar-name{font-weight:700;font-size:14px;color:var(--text-dark)}
+.topbar-name span{color:var(--blue-mid)}
+.topbar-badge{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--blue-dark);background:var(--blue-tint);border:1px solid var(--blue-accent);border-radius:4px;padding:3px 9px;letter-spacing:.08em;text-transform:uppercase}
+.container{max-width:1440px;margin:0 auto;padding:22px;display:grid;grid-template-columns:480px 1fr;gap:18px;align-items:start}
+.card{background:var(--white);border-radius:8px;border:1px solid var(--border);border-top:4px solid var(--blue-mid);box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden}
+.card-header{background:var(--surface);border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:9px}
+.card-header-dot{width:8px;height:8px;border-radius:50%;background:var(--blue-mid)}
+.card-header h2{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-dark);border:none;padding:0;margin:0}
+.card-body{padding:20px}
+.field-group{margin-bottom:18px}
+.group-label{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--text-light);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.group-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.check-item{display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text-mid);transition:all .12s;user-select:none}
+.check-item:hover{border-color:var(--blue-mid);background:var(--blue-tint);color:var(--blue-dark)}
+.check-item:has(input:checked){border-color:var(--blue-mid);background:var(--blue-tint);color:var(--blue-dark)}
+.check-item input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:14px;height:14px;border:1.5px solid var(--text-light);border-radius:3px;flex-shrink:0;cursor:pointer;position:relative;transition:all .12s}
+.check-item input[type="checkbox"]:checked{background:var(--blue-mid);border-color:var(--blue-mid)}
+.check-item input[type="checkbox"]:checked::after{content:'';position:absolute;left:2px;top:0;width:5px;height:8px;border:2px solid white;border-top:none;border-left:none;transform:rotate(45deg)}
+.vitals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px}
+.vital-field label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-gray);display:block;margin-bottom:4px}
+.vital-field input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text-dark);background:var(--white);outline:none;transition:border-color .12s,box-shadow .12s}
+.vital-field input::placeholder{color:var(--text-light);font-size:11px}
+.vital-field input:focus{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+.btn-process{width:100%;padding:13px;background:var(--blue-mid);color:white;font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:none;border-bottom:3px solid var(--blue-dark);border-radius:6px;cursor:pointer;transition:all .1s}
+.btn-process:hover{background:var(--blue-dark)}
+.btn-process:active{transform:translateY(2px);border-bottom-width:1px}
+.output-idle{text-align:center;padding:90px 30px;color:var(--text-light)}
+.output-idle p{font-size:12px;letter-spacing:.03em;line-height:1.7}
+.error-box{background:#fef2f2;border:1px solid #fecaca;border-left:3px solid var(--red);border-radius:6px;padding:14px 16px;font-size:12px;color:#991b1b;font-weight:600}
+.protocol-block{border:1px solid var(--border-blue);border-left:4px solid var(--blue-mid);border-radius:6px;margin-bottom:12px;overflow:hidden;animation:slideIn .2s ease}
+.protocol-block.critical{border-left-color:var(--red)}
+.protocol-block.alert{border-left-color:var(--amber)}
+@keyframes slideIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.protocol-header{background:var(--surface);border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;justify-content:space-between}
+.protocol-title{font-size:12px;font-weight:700;color:var(--text-dark)}
+.proto-tag{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px}
+.tag-critical{background:#fee2e2;color:var(--red)}
+.tag-alert{background:#fef3c7;color:var(--amber)}
+.tag-std{background:var(--blue-tint);color:var(--blue-dark)}
+.protocol-body{padding:12px 14px}
+.sub-label{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-gray);padding-bottom:5px;margin-top:10px;margin-bottom:4px;border-bottom:1px solid var(--border);display:block}
+.step{display:flex;align-items:flex-start;gap:8px;padding:4px 0;font-size:12.5px;color:var(--text-mid);line-height:1.5}
+.step::before{content:'>';color:var(--blue-mid);font-weight:700;font-size:14px;flex-shrink:0;line-height:1.3}
+.pill{display:inline;font-family:var(--mono);font-size:10.5px;font-weight:500;background:var(--blue-tint);color:var(--blue-dark);border:1px solid var(--blue-accent);border-radius:3px;padding:0 4px}
+.med-table-wrap{margin-top:6px;border:1px solid var(--border-blue);border-top:3px solid var(--blue-dark);border-radius:6px;overflow:hidden;animation:slideIn .3s ease}
+.med-table-header{background:var(--blue-dark);padding:11px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.med-table-header h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:white}
+.med-count-badge{background:rgba(255,255,255,.2);color:white;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
+.med-legend{font-size:10px;color:rgba(255,255,255,.75);margin-left:auto;font-style:italic;display:flex;align-items:center;gap:5px}
+.med-legend-dot{width:10px;height:10px;background:#fca5a5;border-radius:2px;flex-shrink:0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--blue-tint)}
+th{text-align:left;padding:8px 12px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue-dark);border-bottom:1px solid var(--border-blue)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface)}
+td{padding:9px 12px;vertical-align:top;color:var(--text-mid);line-height:1.45}
+td:first-child{font-weight:700;color:var(--text-dark);white-space:nowrap}
+.dose-cell{font-family:var(--mono);font-size:11px;color:var(--blue-dark);font-weight:600}
+.route-badge{display:inline-block;font-size:9px;font-weight:700;background:var(--blue-tint);color:var(--blue-dark);border:1px solid var(--blue-accent);border-radius:3px;padding:1px 5px;letter-spacing:.05em;white-space:nowrap}
+.notes-cell{font-size:11px;color:var(--text-gray);font-style:italic}
+.reason-cell{font-size:11px;font-weight:600}
+.priority-high{background:#fff5f5}
+.priority-high td:first-child,.priority-high .reason-cell{color:var(--red)}
+</style>
 </head>
 <body>
-
 <div class="topbar">
-    <div class="topbar-left">
-        <div class="topbar-logo">M+</div>
-        <div class="topbar-name">MDFR <span>Clinical Operations</span> Portal</div>
-    </div>
-    <div class="topbar-badge">ALS Roleplay Guide</div>
+  <div class="topbar-left">
+    <div class="topbar-logo">M+</div>
+    <div class="topbar-name">MDFR <span>Clinical Operations</span> Portal</div>
+  </div>
+  <div class="topbar-badge">ALS Roleplay Guide</div>
 </div>
 
 <div class="container">
-    <div class="card">
-        <div class="card-header"><div class="card-header-dot"></div><h2>Field Assessment</h2></div>
-        <div class="card-body">
-            <div class="field-group">
-                <div class="group-label">Trauma / Critical Care</div>
-                <div class="check-grid" id="trauma_list">
-                    <label class="check-item"><input type="checkbox" value="arrest"> Cardiac Arrest</label>
-                    <label class="check-item"><input type="checkbox" value="chest_pain"> Chest Pain (AMI)</label>
-                    <label class="check-item"><input type="checkbox" value="gsw_torso"> GSW Torso</label>
-                    <label class="check-item"><input type="checkbox" value="gsw_limb"> GSW Limb</label>
-                    <label class="check-item"><input type="checkbox" value="evisceration"> Evisceration</label>
-                    <label class="check-item"><input type="checkbox" value="burns"> Burns (Major)</label>
-                    <label class="check-item"><input type="checkbox" value="flail_chest"> Flail Chest</label>
-                    <label class="check-item"><input type="checkbox" value="open_fx"> Open FX</label>
-                    <label class="check-item"><input type="checkbox" value="broken_limb"> Broken Limb</label>
-                    <label class="check-item"><input type="checkbox" value="laceration"> Laceration</label>
-                    <label class="check-item"><input type="checkbox" value="massive_bleed"> Massive Bleed</label>
-                    <label class="check-item"><input type="checkbox" value="seizure"> Seizure</label>
-                </div>
-            </div>
-            <div class="field-group">
-                <div class="group-label">Airway &amp; Respiratory</div>
-                <div class="check-grid" id="resp_list">
-                    <label class="check-item"><input type="checkbox" value="blocked_airway"> Blocked Airway</label>
-                    <label class="check-item"><input type="checkbox" value="coll_airway"> Collapsed Airway</label>
-                    <label class="check-item"><input type="checkbox" value="coll_lung"> Collapsed Lung</label>
-                    <label class="check-item"><input type="checkbox" value="tension"> Tension Pneumo</label>
-                    <label class="check-item"><input type="checkbox" value="unconscious"> GCS &lt; 8</label>
-                    <label class="check-item"><input type="checkbox" value="iv_fail"> IV Unfeasible</label>
-                </div>
-            </div>
-            <div class="field-group">
-                <div class="group-label">Additional Presentations</div>
-                <div class="check-grid" id="extra_list">
-                    <label class="check-item"><input type="checkbox" value="wheezing"> Wheezing / Asthma</label>
-                    <label class="check-item"><input type="checkbox" value="anaphylaxis"> Anaphylaxis</label>
-                    <label class="check-item"><input type="checkbox" value="svt"> SVT / Tachyarrhythmia</label>
-                    <label class="check-item"><input type="checkbox" value="afib"> Afib / A-Flutter</label>
-                    <label class="check-item"><input type="checkbox" value="agitation"> Agitation / Delirium</label>
-                    <label class="check-item"><input type="checkbox" value="nausea"> Nausea / Vomiting</label>
-                    <label class="check-item"><input type="checkbox" value="stroke"> Stroke Symptoms</label>
-                    <label class="check-item"><input type="checkbox" value="allergic"> Allergic Reaction</label>
-                    <label class="check-item"><input type="checkbox" value="pain"> Pain (Moderate)</label>
-                    <label class="check-item"><input type="checkbox" value="fever"> Fever</label>
-                    <label class="check-item"><input type="checkbox" value="co2_inhalation"> CO2 / Smoke Inhalation</label>
-                    <label class="check-item"><input type="checkbox" value="syncope"> Syncope</label>
-                </div>
-            </div>
-            <div class="field-group">
-                <div class="group-label">Vital Signs</div>
-                <div class="vitals-grid">
-                    <div class="vital-field"><label>Pulse (BPM)</label><input type="number" id="pulse" placeholder="e.g. 88"></div>
-                    <div class="vital-field"><label>BP Systolic</label><input type="number" id="bp" placeholder="mmHg"></div>
-                    <div class="vital-field"><label>Resp Rate</label><input type="number" id="rr" placeholder="BPM"></div>
-                    <div class="vital-field"><label>SpO2 (%)</label><input type="number" id="spo2" placeholder="%"></div>
-                    <div class="vital-field"><label>BGL (mg/dL)</label><input type="number" id="bgl" placeholder="mg/dL"></div>
-                    <div class="vital-field"><label>Temp (F)</label><input type="number" id="temp" placeholder="F"></div>
-                </div>
-            </div>
-            <button class="btn-process" onclick="generatePlan()">&#9654; Process Protocols</button>
-        </div>
+<div class="card">
+  <div class="card-header"><div class="card-header-dot"></div><h2>Field Assessment</h2></div>
+  <div class="card-body">
+
+    <div class="field-group">
+      <div class="group-label">Trauma / Critical Care</div>
+      <div class="check-grid" id="trauma_list">
+        <label class="check-item"><input type="checkbox" value="arrest"> Cardiac Arrest</label>
+        <label class="check-item"><input type="checkbox" value="chest_pain"> Chest Pain (AMI)</label>
+        <label class="check-item"><input type="checkbox" value="gsw_torso"> GSW / Stab Torso</label>
+        <label class="check-item"><input type="checkbox" value="gsw_limb"> GSW / Stab Limb</label>
+        <label class="check-item"><input type="checkbox" value="evisceration"> Evisceration</label>
+        <label class="check-item"><input type="checkbox" value="flail_chest"> Flail Chest</label>
+        <label class="check-item"><input type="checkbox" value="open_fx"> Open Fracture</label>
+        <label class="check-item"><input type="checkbox" value="broken_limb"> Closed Fracture</label>
+        <label class="check-item"><input type="checkbox" value="laceration"> Laceration</label>
+        <label class="check-item"><input type="checkbox" value="massive_bleed"> Massive Bleed</label>
+        <label class="check-item"><input type="checkbox" value="pelvic_fx"> Pelvic Fracture</label>
+        <label class="check-item"><input type="checkbox" value="avulsion"> Avulsion / Degloving</label>
+        <label class="check-item"><input type="checkbox" value="abd_tender"> Abdominal Tenderness</label>
+        <label class="check-item"><input type="checkbox" value="seizure"> Seizure</label>
+      </div>
     </div>
 
-    <div class="card" id="output">
-        <div class="card-header"><div class="card-header-dot"></div><h2>MDFR Clinical Treatment Plan</h2></div>
-        <div class="card-body">
-            <div class="output-idle"><p>Complete the field assessment on the left<br>and click <strong>Process Protocols</strong> to generate the treatment plan.</p></div>
-        </div>
+    <div class="field-group">
+      <div class="group-label">Burns</div>
+      <div class="check-grid" id="burn_list">
+        <label class="check-item"><input type="checkbox" value="burn_thermal"> Thermal Burn</label>
+        <label class="check-item"><input type="checkbox" value="burn_chemical"> Chemical Burn</label>
+        <label class="check-item"><input type="checkbox" value="burn_electrical"> Electrical Burn</label>
+        <label class="check-item"><input type="checkbox" value="burn_inhalation"> Inhalation Burn</label>
+      </div>
     </div>
+
+    <div class="field-group">
+      <div class="group-label">Airway &amp; Respiratory</div>
+      <div class="check-grid" id="resp_list">
+        <label class="check-item"><input type="checkbox" value="blocked_airway"> Blocked Airway</label>
+        <label class="check-item"><input type="checkbox" value="airway_edema"> Airway Edema / Swelling</label>
+        <label class="check-item"><input type="checkbox" value="coll_airway"> Collapsed / Lost Airway</label>
+        <label class="check-item"><input type="checkbox" value="coll_lung"> Collapsed Lung</label>
+        <label class="check-item"><input type="checkbox" value="tension"> Tension Pneumo</label>
+        <label class="check-item"><input type="checkbox" value="unconscious"> GCS &lt; 8</label>
+        <label class="check-item"><input type="checkbox" value="iv_fail"> IV Unfeasible</label>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="group-label">Additional Presentations</div>
+      <div class="check-grid" id="extra_list">
+        <label class="check-item"><input type="checkbox" value="wheezing"> Wheezing / Asthma</label>
+        <label class="check-item"><input type="checkbox" value="anaphylaxis"> Anaphylaxis</label>
+        <label class="check-item"><input type="checkbox" value="svt"> SVT / Tachyarrhythmia</label>
+        <label class="check-item"><input type="checkbox" value="afib"> Afib / A-Flutter</label>
+        <label class="check-item"><input type="checkbox" value="agitation"> Agitation / Delirium</label>
+        <label class="check-item"><input type="checkbox" value="nausea"> Nausea / Vomiting</label>
+        <label class="check-item"><input type="checkbox" value="stroke"> Stroke Symptoms</label>
+        <label class="check-item"><input type="checkbox" value="allergic"> Allergic Reaction</label>
+        <label class="check-item"><input type="checkbox" value="pain"> Pain (Moderate)</label>
+        <label class="check-item"><input type="checkbox" value="fever"> Fever</label>
+        <label class="check-item"><input type="checkbox" value="co2_inhalation"> CO2 / Smoke Inhalation</label>
+        <label class="check-item"><input type="checkbox" value="syncope"> Syncope</label>
+        <label class="check-item"><input type="checkbox" value="altered_loc"> Altered LOC</label>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="group-label">Vital Signs</div>
+      <div class="vitals-grid">
+        <div class="vital-field"><label>Pulse (BPM)</label><input type="number" id="pulse" placeholder="e.g. 88"></div>
+        <div class="vital-field"><label>BP Systolic</label><input type="number" id="bp" placeholder="mmHg"></div>
+        <div class="vital-field"><label>Resp Rate</label><input type="number" id="rr" placeholder="BPM"></div>
+        <div class="vital-field"><label>SpO2 (%)</label><input type="number" id="spo2" placeholder="%"></div>
+        <div class="vital-field"><label>BGL (mg/dL)</label><input type="number" id="bgl" placeholder="mg/dL"></div>
+        <div class="vital-field"><label>Temp (F)</label><input type="number" id="temp" placeholder="F"></div>
+      </div>
+    </div>
+
+    <button class="btn-process" onclick="generatePlan()">&#9654; Process Protocols</button>
+  </div>
+</div>
+
+<div class="card" id="output">
+  <div class="card-header"><div class="card-header-dot"></div><h2>MDFR Clinical Treatment Plan</h2></div>
+  <div class="card-body">
+    <div class="output-idle"><p>Complete the field assessment on the left<br>and click <strong>Process Protocols</strong> to generate the treatment plan.</p></div>
+  </div>
+</div>
 </div>
 
 <script>
+// =====================================================
+// MEDICATION DATABASE
+// =====================================================
 const MEDICATIONS = [
-    // CARDIAC ARREST
-    {name:'Epinephrine',dose:'1mg (1:10,000)',route:'IV/IO',indication:'Cardiac arrest — all rhythms',notes:'Rapid IV push. Follow with 20mL NS flush. Repeat every 3-5 min. Hold if ROSC achieved.',priority:'high',
-     condition:(v,t,r,e)=>v.pulse===0||t.includes('arrest'),
-     reason:(v,t,r,e)=>'Patient is in cardiac arrest — epinephrine drives coronary and cerebral perfusion pressure during CPR to increase chance of ROSC.'},
-    {name:'Amiodarone',dose:'300mg IV; 150mg repeat',route:'IV/IO',indication:'VF / Pulseless VT during cardiac arrest',notes:'Push 300mg rapid IV after 3rd shock. Repeat 150mg every 3-5 min for persistent VF/pVT.',priority:'high',
-     condition:(v,t,r,e)=>v.pulse===0||t.includes('arrest'),
-     reason:(v,t,r,e)=>'Cardiac arrest present — amiodarone is first-line antiarrhythmic for shock-refractory VF/pVT; stabilizes the myocardial membrane.'},
-    {name:'Lidocaine',dose:'1-1.5 mg/kg',route:'IV/IO',indication:'VF/pVT — alternative if Amiodarone unavailable',notes:'Slow IV push. Repeat 0.5-0.75 mg/kg every 5-10 min. Max 3 mg/kg.',priority:'normal',
-     condition:(v,t,r,e)=>v.pulse===0||t.includes('arrest'),
-     reason:(v,t,r,e)=>'Cardiac arrest — lidocaine is the backup antiarrhythmic if amiodarone is unavailable or contraindicated.'},
-    {name:'Sodium Bicarbonate',dose:'1 mEq/kg',route:'IV/IO',indication:'Prolonged arrest (>10 min), suspected acidosis, wide QRS',notes:'Flush line with NS before and after — incompatible with calcium salts. Not routine in all arrests.',priority:'normal',
-     condition:(v,t,r,e)=>v.pulse===0||t.includes('arrest'),
-     reason:(v,t,r,e)=>'Cardiac arrest present — bicarb buffers the metabolic acidosis that accumulates during prolonged resuscitation and impairs drug efficacy.'},
-    // BRADYCARDIA
-    {name:'Atropine',dose:'0.5mg',route:'IV/IO',indication:'Symptomatic bradycardia, organophosphate poisoning',notes:'Rapid IV push. Repeat every 3-5 min up to max 3mg. If no response, initiate TCP.',priority:'high',
-     condition:(v,t,r,e)=>v.pulse>0&&v.pulse<50,
-     reason:(v,t,r,e)=>`Pulse is ${v.pulse} BPM — atropine blocks vagal tone to increase heart rate and restore adequate cardiac output.`},
-    // SVT/ARRHYTHMIA
-    {name:'Adenosine',dose:'6mg first; 12mg second',route:'IV — Rapid Push',indication:'Stable SVT with narrow QRS',notes:'Push in 1-2 sec into antecubital vein. Immediately follow with 20mL NS rapid flush. Do NOT use for wide-complex tachycardia.',priority:'high',
-     condition:(v,t,r,e)=>e.includes('svt')&&v.pulse>150&&!(v.pulse===0||t.includes('arrest')),
-     reason:(v,t,r,e)=>`Heart rate is ${v.pulse} BPM with SVT — adenosine transiently blocks the AV node to interrupt the reentrant circuit and restore sinus rhythm.`},
-    {name:'Diltiazem',dose:'0.25 mg/kg over 2 min',route:'IV',indication:'Afib, A-Flutter, SVT — rate control',notes:'Administer over 2 full minutes. Monitor BP — hold if BP < 90. Do NOT give IV with beta-blockers.',priority:'normal',
-     condition:(v,t,r,e)=>(e.includes('afib')||e.includes('svt'))&&v.bp>=90&&!(v.pulse===0||t.includes('arrest')),
-     reason:(v,t,r,e)=>`${e.includes('afib')?'Atrial fibrillation':'SVT'} with BP ${v.bp} mmHg — diltiazem slows ventricular rate via calcium channel blockade to reduce myocardial demand.`},
-    // SHOCK
-    {name:'Norepinephrine (Levophed)',dose:'0.1-0.5 mcg/kg/min',route:'IV Infusion',indication:'Distributive shock — BP < 90 (septic, spinal, anaphylactic)',notes:'Mix 4mg in 250mL NS (16 mcg/mL). Start low, titrate every 3-5 min to MAP >=65. Ensure adequate volume first.',priority:'high',
-     condition:(v,t,r,e)=>v.bp<90&&v.pulse>0&&!(v.pulse===0||t.includes('arrest'))&&(e.includes('anaphylaxis')||e.includes('stroke')||e.includes('fever')||e.includes('allergic')||v.bp<80),
-     reason:(v,t,r,e)=>`BP is ${v.bp} mmHg — norepinephrine provides vasopressor support to restore MAP >=65 and prevent end-organ hypoperfusion in distributive shock.`},
-    // CHEST PAIN / AMI
-    {name:'Aspirin',dose:'324mg',route:'PO — Chewed',indication:'Suspected AMI, unstable angina',notes:'Instruct patient to CHEW completely. Withhold if active GI bleed or ASA allergy.',priority:'high',
-     condition:(v,t,r,e)=>t.includes('chest_pain'),
-     reason:(v,t,r,e)=>'Chest pain with suspected AMI — aspirin irreversibly inhibits platelet aggregation to limit coronary thrombus extension and reduce infarct size.'},
-    {name:'Nitroglycerin',dose:'0.4mg SL',route:'Sublingual',indication:'Chest pain, angina, CHF with pulmonary edema',notes:'Place under tongue. Withhold if BP < 100. Contraindicated if PDE-5 inhibitors used within 24-48 hours.',priority:'normal',
-     condition:(v,t,r,e)=>t.includes('chest_pain')&&v.bp>=100,
-     reason:(v,t,r,e)=>`Chest pain with BP ${v.bp} mmHg — nitroglycerin reduces preload via venodilation and dilates coronary arteries to relieve ischemic pain.`},
-    {name:'Tenecteplase (TNK-tPA)',dose:'Weight-based: 30-50mg',route:'IV Bolus (5 sec)',indication:'STEMI (no PCI available), ischemic stroke, massive PE',notes:'REQUIRES medical control authorization. Verify no hemorrhagic contraindications. Push over 5 seconds.',priority:'normal',
-     condition:(v,t,r,e)=>t.includes('chest_pain')||e.includes('stroke'),
-     reason:(v,t,r,e)=>`${t.includes('chest_pain')?'STEMI suspected':'Stroke symptoms present'} — TNK-tPA lyses the occlusive thrombus when PCI or cath lab is not immediately accessible.`},
-    // HEMORRHAGE
-    {name:'Tranexamic Acid (TXA)',dose:'1g in 100mL NS',route:'IV Infusion',indication:'INTERNAL hemorrhage only — GSW torso, evisceration, massive non-compressible bleed',notes:'TXA is indicated ONLY for internal or non-compressible hemorrhage. Do NOT give for external wounds controlled by tourniquet or dressing. Infuse over 10 min. Must be within 3 hours of injury.',priority:'high',
-     condition:(v,t,r,e)=>t.includes('gsw_torso')||t.includes('massive_bleed')||t.includes('evisceration'),
-     reason:(v,t,r,e)=>`Suspected internal hemorrhage (${t.includes('gsw_torso')?'torso GSW':t.includes('evisceration')?'evisceration':'massive bleed'}) — TXA inhibits fibrinolysis to stabilize clot formation and reduce ongoing blood loss.`},
-    {name:'Calcium Gluconate',dose:'1g',route:'IV/IO',indication:'Massive transfusion protocol, hyperkalemia',notes:'Slow IV push over 3 min. Flush line before and after — precipitates with Sodium Bicarbonate.',priority:'normal',
-     condition:(v,t,r,e)=>t.includes('gsw_torso')||t.includes('massive_bleed')||t.includes('arrest'),
-     reason:(v,t,r,e)=>`${t.includes('arrest')?'Cardiac arrest':'Massive hemorrhage'} — calcium is rapidly depleted during massive transfusion and is essential for myocardial contractility and coagulation.`},
-    // PAIN
-    {name:'Fentanyl',dose:'1 mcg/kg (max 100mcg)',route:'IV/IO or Intranasal',indication:'Moderate to severe pain, closed fractures, soft tissue injury',notes:'Titrate to pain relief. Monitor respiratory rate. Have Naloxone available. IN route: 2 mcg/kg via MAD.',priority:'normal',
-     condition:(v,t,r,e)=>(t.includes('broken_limb')||t.includes('burns')||t.includes('laceration')||e.includes('pain'))&&!t.includes('open_fx'),
-     reason:(v,t,r,e)=>`${t.includes('broken_limb')?'Fracture':t.includes('burns')?'Burns':t.includes('laceration')?'Laceration':'Reported pain'} — fentanyl provides rapid-onset opioid analgesia with a short, manageable duration.`},
-    {name:'Ketamine',dose:'0.3-0.5 mg/kg IV (analgesic)',route:'IV/IO or IM',indication:'Severe pain, open fractures, burns, procedural analgesia',notes:'IV: slow push over 10 min. IM dose: 1-2 mg/kg. Keep Midazolam available for emergence reactions.',priority:'normal',
-     condition:(v,t,r,e)=>t.includes('open_fx')||t.includes('burns')||t.includes('gsw_torso')||t.includes('gsw_limb'),
-     reason:(v,t,r,e)=>`Severe traumatic injury (${t.includes('open_fx')?'open fracture':t.includes('burns')?'burns':'penetrating trauma'}) — ketamine provides dissociative analgesia while preserving airway reflexes and hemodynamic stability.`},
-    {name:'IV Acetaminophen (Ofirmev)',dose:'1000mg in 100mL',route:'IV Infusion',indication:'Moderate pain, fever (temp >100.4 F)',notes:'Infuse over 15 minutes. Reduces opioid requirements by up to 40%. Avoid in hepatic failure.',priority:'normal',
-     condition:(v,t,r,e)=>(!isNaN(v.temp)&&v.temp>100.4)||e.includes('fever')||e.includes('pain'),
-     reason:(v,t,r,e)=>`${(!isNaN(v.temp)&&v.temp>100.4)?`Temperature is ${v.temp}F`:'Pain or fever reported'} — IV acetaminophen provides non-opioid analgesia and antipyresis.`},
-    // RSI
-    {name:'Etomidate',dose:'0.3 mg/kg (approx 20mg)',route:'IV/IO',indication:'RSI induction — GCS < 8, airway compromise',notes:'Rapid IV push. Onset 30-60 sec, duration ~5 min. Minimal cardiovascular effects.',priority:'high',
-     condition:(v,t,r,e)=>r.includes('coll_airway')||r.includes('unconscious'),
-     reason:(v,t,r,e)=>'Airway compromise requiring RSI — etomidate induces rapid sedation for intubation with minimal hemodynamic impact.'},
-    {name:'Rocuronium',dose:'1.2 mg/kg (approx 100mg)',route:'IV/IO',indication:'RSI — neuromuscular blockade',notes:'Push immediately after Etomidate. Onset ~60 sec. Duration 45-60 min — patient requires BVM until reversal.',priority:'high',
-     condition:(v,t,r,e)=>r.includes('coll_airway')||r.includes('unconscious'),
-     reason:(v,t,r,e)=>'RSI in progress — rocuronium provides rapid neuromuscular blockade within 60 seconds to allow safe endotracheal intubation.'},
-    // AIRWAY MEDS
-    {name:'Racemic Epinephrine (DL-Epi)',dose:'0.5mL of 2.25% in 2.5mL NS',route:'Nebulized',indication:'Upper airway edema, asthma, CO2 inhalation, anaphylaxis with stridor',notes:'Administer via nebulizer mask. Monitor for rebound edema — patient must remain observed 30+ min after treatment.',priority:'high',
-     condition:(v,t,r,e)=>e.includes('anaphylaxis')||r.includes('blocked_airway')||e.includes('wheezing')||e.includes('co2_inhalation'),
-     reason:(v,t,r,e)=>`${e.includes('anaphylaxis')?'Anaphylaxis with airway edema':e.includes('co2_inhalation')?'CO2 inhalation causing mucosal edema':e.includes('wheezing')?'Refractory bronchospasm':'Airway obstruction'} — racemic epi reduces mucosal edema and relieves upper and lower airway obstruction.`},
-    {name:'Albuterol',dose:'2.5mg in 3mL NS',route:'Nebulized',indication:'Bronchospasm, asthma, CO2 inhalation, anaphylaxis',notes:'Via inline nebulizer. Continuous nebulization for severe asthma. Also indicated for reactive bronchospasm from CO2/smoke inhalation.',priority:'high',
-     condition:(v,t,r,e)=>e.includes('wheezing')||e.includes('anaphylaxis')||e.includes('co2_inhalation'),
-     reason:(v,t,r,e)=>`${e.includes('co2_inhalation')?'CO2/smoke inhalation causing reactive bronchospasm':e.includes('anaphylaxis')?'Anaphylaxis with bronchospasm':'Active bronchospasm / wheezing'} — albuterol relaxes bronchial smooth muscle via beta-2 agonism.`},
-    {name:'Magnesium Sulfate',dose:'2g in 100mL NS',route:'IV Infusion',indication:'Severe / refractory asthma not responding to Albuterol and steroids',notes:'Infuse over 20 minutes — rapid push causes hypotension and cardiac depression. Requires medical control authorization. Monitor BP and deep tendon reflexes.',priority:'normal',
-     condition:(v,t,r,e)=>e.includes('wheezing')||e.includes('co2_inhalation'),
-     reason:(v,t,r,e)=>`Bronchospasm present — magnesium sulfate causes bronchial smooth muscle relaxation via calcium channel antagonism when Albuterol has not achieved adequate response.`},
-    {name:'Methylprednisolone (Solu-Medrol)',dose:'125mg',route:'IV/IO or IM',indication:'Reactive airway disease, CO2 inhalation, anaphylaxis, severe allergic reactions',notes:'Give early — anti-inflammatory effects delayed 4-6 hours. IV push over 1-2 min.',priority:'normal',
-     condition:(v,t,r,e)=>e.includes('wheezing')||e.includes('allergic')||e.includes('anaphylaxis')||e.includes('co2_inhalation'),
-     reason:(v,t,r,e)=>`${e.includes('anaphylaxis')?'Anaphylaxis':e.includes('co2_inhalation')?'CO2 inhalation causing airway inflammation':e.includes('wheezing')?'Asthma/bronchospasm':'Allergic reaction'} — steroids reduce airway inflammation; give early as onset is delayed 4-6 hours.`},
-    // SEIZURE/SEDATION
-    {name:'Midazolam (Versed)',dose:'5mg IV / 10mg IM or IN',route:'IV, IM, or Intranasal',indication:'Active seizure, acute agitation, procedural sedation',notes:'Active seizure: 5mg IV or 10mg IM/IN. IN: 0.2 mg/kg via MAD. Monitor airway and respiratory rate closely.',priority:'high',
-     condition:(v,t,r,e)=>t.includes('seizure')||e.includes('agitation'),
-     reason:(v,t,r,e)=>`${t.includes('seizure')?'Active seizure':'Acute agitation'} — midazolam enhances GABA inhibition to terminate seizure activity or achieve rapid chemical sedation.`},
-    // NAUSEA
-    {name:'Ondansetron (Zofran)',dose:'4mg IV or 4mg ODT',route:'IV or Oral Dissolving',indication:'Nausea / vomiting',notes:'IV: push over 2-5 min. ODT: place under tongue, dissolves in 30 sec. No QTc monitoring required. Can repeat once in 30 min.',priority:'normal',
-     condition:(v,t,r,e)=>e.includes('nausea'),
-     reason:(v,t,r,e)=>'Nausea/vomiting reported — ondansetron blocks serotonin 5-HT3 receptors to suppress nausea without sedation or cardiac side effects.'},
-    // ABX
-    {name:'Cefazolin (Ancef)',dose:'2g in 100mL NS',route:'IV Infusion',indication:'Open fractures, penetrating wounds, prehospital ABX prophylaxis',notes:'Infuse over 30 min. Goal: within 60 min of wound contamination. Verify no penicillin/cephalosporin allergy.',priority:'normal',
-     condition:(v,t,r,e)=>t.includes('open_fx')||t.includes('gsw_torso')||t.includes('gsw_limb')||t.includes('evisceration'),
-     reason:(v,t,r,e)=>`${t.includes('open_fx')?'Open fracture':t.includes('evisceration')?'Evisceration':'Penetrating wound'} — prehospital Ancef within 60 minutes of contamination significantly reduces risk of deep wound infection.`},
-    // METABOLIC
-    {name:'Dextrose 10% (D10W)',dose:'250mL IV bag',route:'IV Infusion',indication:'Hypoglycemia — BGL < 70 mg/dL',notes:'Run wide open until BGL > 80. Preferred over D50 prehospital. No IV: Glucagon 1mg IM. Recheck every 15 min.',priority:'high',
-     condition:(v,t,r,e)=>!isNaN(v.bgl)&&v.bgl<70,
-     reason:(v,t,r,e)=>`BGL is ${v.bgl} mg/dL — D10W rapidly corrects hypoglycemia to prevent irreversible neurological injury from glucose deprivation.`},
-    {name:'Regular Insulin',dose:'10 Units',route:'IV',indication:'Hyperglycemia — BGL > 250 mg/dL with DKA signs',notes:'Give with 1L NS bolus. Do not correct faster than 50 mg/dL per hour to prevent cerebral edema.',priority:'normal',
-     condition:(v,t,r,e)=>!isNaN(v.bgl)&&v.bgl>250,
-     reason:(v,t,r,e)=>`BGL is ${v.bgl} mg/dL — insulin drives glucose into cells and begins reversing the ketoacidotic state.`}
+  // CARDIAC ARREST
+  {name:'Epinephrine',dose:'1mg (1:10,000)',route:'IV/IO',indication:'Cardiac arrest — all rhythms',
+   notes:'Rapid IV push, 20mL NS flush immediately after. Repeat every 3-5 min. Hold on ROSC.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>v.pulse===0||t.includes('arrest'),
+   reason:(v,t,r,e)=>'Cardiac arrest — epi drives coronary and cerebral perfusion pressure during CPR to restore spontaneous circulation.'},
+  {name:'Amiodarone',dose:'300mg; 150mg repeat',route:'IV/IO',indication:'Shock-refractory VF / Pulseless VT',
+   notes:'Push 300mg rapid IV after 3rd defibrillation. Repeat 150mg every 3-5 min for persistent VF/pVT.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>v.pulse===0||t.includes('arrest'),
+   reason:(v,t,r,e)=>'Cardiac arrest — amiodarone stabilizes the myocardial membrane against reentrant shockable rhythms.'},
+  {name:'Lidocaine',dose:'1-1.5 mg/kg',route:'IV/IO',indication:'VF/pVT — backup if Amiodarone unavailable',
+   notes:'Slow IV push. Repeat 0.5-0.75 mg/kg every 5-10 min. Max 3 mg/kg.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>v.pulse===0||t.includes('arrest'),
+   reason:(v,t,r,e)=>'Cardiac arrest — lidocaine is the alternative antiarrhythmic when amiodarone is unavailable.'},
+  {name:'Sodium Bicarbonate',dose:'1 mEq/kg',route:'IV/IO',indication:'Prolonged arrest >10 min, suspected acidosis, wide QRS',
+   notes:'Flush line with NS before and after — precipitates with calcium. Not routine; use for refractory or prolonged arrests.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>v.pulse===0||t.includes('arrest'),
+   reason:(v,t,r,e)=>'Prolonged cardiac arrest — bicarbonate buffers severe metabolic acidosis that accumulates and impairs drug efficacy.'},
+  // BRADYCARDIA
+  {name:'Atropine',dose:'0.5mg',route:'IV/IO',indication:'Symptomatic bradycardia, organophosphate poisoning',
+   notes:'Rapid IV push. Repeat every 3-5 min to max 3mg. If unresponsive, initiate Transcutaneous Pacing (TCP).',
+   priority:'high',
+   condition:(v,t,r,e,b)=>v.pulse>0&&v.pulse<50&&!(v.pulse===0||t.includes('arrest')),
+   reason:(v,t,r,e)=>`Pulse is ${v.pulse} BPM — atropine blocks vagal tone to increase heart rate and restore cardiac output.`},
+  // TACHYCARDIA (SVT/AFIB)
+  {name:'Adenosine',dose:'6mg first; 12mg second',route:'IV Rapid Push',indication:'Stable narrow-complex SVT',
+   notes:'Push in 1-2 sec into antecubital or larger vein. Follow immediately with 20mL NS rapid flush. Attempt Valsalva first. Do NOT use for wide-complex tachycardia.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>e.includes('svt')&&v.pulse>150&&!(v.pulse===0||t.includes('arrest')),
+   reason:(v,t,r,e)=>`Heart rate ${v.pulse} BPM with SVT — adenosine transiently blocks the AV node to interrupt the reentrant circuit.`},
+  {name:'Diltiazem',dose:'0.25 mg/kg over 2 min',route:'IV',indication:'Afib, A-Flutter, SVT rate control — BP ≥90',
+   notes:'Administer over 2 full minutes. Monitor BP — hold if BP drops below 90. Do NOT give IV with beta-blockers.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>(e.includes('afib')||e.includes('svt'))&&v.bp>=90&&!(v.pulse===0||t.includes('arrest')),
+   reason:(v,t,r,e)=>`${e.includes('afib')?'Afib':'SVT'} with BP ${v.bp} mmHg — diltiazem slows ventricular rate via calcium channel blockade.`},
+  {name:'Metoprolol',dose:'5mg slow IV push',route:'IV',indication:'Sinus tachycardia >120 BPM, rate control after Diltiazem',
+   notes:'Push over 2-5 min. Repeat every 5 min up to 15mg total. Monitor BP and heart rate. Hold if BP <90, HR <60, or bronchospasm.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>v.pulse>120&&!e.includes('svt')&&!e.includes('afib')&&!(v.pulse===0||t.includes('arrest'))&&v.bp>=90&&v.spo2>=94,
+   reason:(v,t,r,e)=>`Pulse ${v.pulse} BPM without identified SVT/Afib — metoprolol slows heart rate via beta-1 blockade after underlying causes are ruled out.`},
+  // HYPOTENSION / SHOCK
+  {name:'Normal Saline Bolus',dose:'500mL-1L NS IV',route:'IV Infusion',indication:'Hypotension BP <90 — first-line volume resuscitation',
+   notes:'FLUIDS FIRST before pressors. Run wide open. Reassess BP after 500mL. Repeat to max 1-2L before initiating vasopressors. In trauma: permissive hypotension — target SBP 80-90.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>v.bp<90&&v.pulse>0&&!(v.pulse===0||t.includes('arrest')),
+   reason:(v,t,r,e)=>`BP is ${v.bp} mmHg — NS bolus restores intravascular volume before any vasopressor is considered. Fluids first.`},
+  {name:'Norepinephrine (Levophed)',dose:'0.5-1 mcg/kg/min',route:'IV Infusion',indication:'Fluid-refractory distributive shock (septic, spinal, anaphylactic)',
+   notes:'Only after 1L NS bolus fails to restore BP. Mix 8mg in 250mL NS (32 mcg/mL). Start at 0.1 mcg/kg/min and titrate up. Target MAP ≥65.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>v.bp<80&&v.pulse>0&&!(v.pulse===0||t.includes('arrest'))&&(e.includes('anaphylaxis')||e.includes('stroke')||e.includes('allergic')||e.includes('fever')||e.includes('altered_loc')),
+   reason:(v,t,r,e)=>`BP is ${v.bp} mmHg — norepinephrine provides vasopressor support only after adequate fluid resuscitation has failed to restore perfusion pressure.`},
+  // CHEST PAIN / AMI
+  {name:'Aspirin',dose:'324mg',route:'PO — Chewed',indication:'Suspected AMI, unstable angina',
+   notes:'Patient must CHEW completely — not swallow whole. Withhold if active GI bleed or ASA allergy.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>t.includes('chest_pain'),
+   reason:(v,t,r,e)=>'Suspected AMI — aspirin irreversibly inhibits platelet aggregation to limit coronary thrombus extension.'},
+  {name:'Nitroglycerin',dose:'0.4mg SL',route:'Sublingual',indication:'Chest pain, angina — BP ≥100',
+   notes:'Place under tongue. Withhold if BP <100. Contraindicated if PDE-5 inhibitor (Viagra, Cialis) used within 24-48 hours.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>t.includes('chest_pain')&&v.bp>=100,
+   reason:(v,t,r,e)=>`Chest pain with BP ${v.bp} mmHg — nitroglycerin reduces cardiac preload via venodilation and dilates coronary arteries.`},
+  {name:'Tenecteplase (TNK-tPA)',dose:'Weight-based 30-50mg',route:'IV Bolus over 5 sec',indication:'STEMI (no PCI available), ischemic stroke, massive PE',
+   notes:'Requires medical control authorization. Verify no hemorrhagic contraindications. Monitor for bleeding.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>t.includes('chest_pain')||e.includes('stroke'),
+   reason:(v,t,r,e)=>`${t.includes('chest_pain')?'STEMI suspected':'Stroke symptoms'} — TNK-tPA lyses occlusive thrombus when PCI or cath lab is not immediately accessible.`},
+  // HEMORRHAGE
+  {name:'Tranexamic Acid (TXA)',dose:'1g in 100mL NS',route:'IV over 10 min',indication:'INTERNAL hemorrhage only — non-compressible bleeds',
+   notes:'TXA is for INTERNAL or non-compressible hemorrhage only. Do NOT give for wounds controlled by tourniquet or dressing. Must be within 3 hours of injury. Rapid push causes hypotension.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>t.includes('gsw_torso')||t.includes('massive_bleed')||t.includes('evisceration')||t.includes('abd_tender')||t.includes('pelvic_fx'),
+   reason:(v,t,r,e)=>`Suspected internal/non-compressible hemorrhage — TXA inhibits fibrinolysis to stabilize clot and reduce ongoing blood loss.`},
+  {name:'Calcium Gluconate',dose:'1g',route:'IV/IO slow push over 3 min',indication:'Massive transfusion protocol, ionized hypocalcemia',
+   notes:'Flush line before and after with NS — precipitates with bicarbonate. Give with every 4 units of blood products.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>t.includes('gsw_torso')||t.includes('massive_bleed')||t.includes('pelvic_fx')||t.includes('arrest'),
+   reason:(v,t,r,e)=>'Massive hemorrhage — citrate in stored blood chelates calcium; ionized hypocalcemia causes cardiac depression and worsens coagulopathy.'},
+  // PAIN
+  {name:'Fentanyl',dose:'1 mcg/kg IV (max 100mcg)',route:'IV/IO or Intranasal',indication:'Moderate-severe pain — closed fractures, lacerations',
+   notes:'Titrate to effect. Monitor respiratory rate and SpO2 after each dose. Have Naloxone available.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>(t.includes('broken_limb')||t.includes('laceration')||t.includes('avulsion')||e.includes('pain'))&&!t.includes('open_fx'),
+   reason:(v,t,r,e)=>'Traumatic pain — fentanyl provides rapid-onset opioid analgesia with a short, manageable duration.'},
+  {name:'Ketamine',dose:'0.3-0.5 mg/kg IV (analgesic)',route:'IV/IO or IM',indication:'Severe pain, open fractures, burns, procedural analgesia',
+   notes:'IV: slow push over 10 min to prevent laryngospasm and emergence reactions. IM: 1-2 mg/kg. Keep Midazolam available.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>t.includes('open_fx')||b.includes('burn_thermal')||b.includes('burn_chemical')||t.includes('gsw_torso')||t.includes('gsw_limb')||t.includes('pelvic_fx')||t.includes('avulsion'),
+   reason:(v,t,r,e)=>'Severe traumatic injury — ketamine provides dissociative analgesia while preserving airway reflexes and hemodynamic stability.'},
+  {name:'IV Acetaminophen (Ofirmev)',dose:'1000mg in 100mL NS',route:'IV over 15 min',indication:'Moderate pain, fever >100.4 F',
+   notes:'Infuse over 15 minutes. Reduces opioid requirements by up to 40%. Avoid in hepatic failure.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>(!isNaN(v.temp)&&v.temp>100.4)||e.includes('fever')||e.includes('pain'),
+   reason:(v,t,r,e)=>`${(!isNaN(v.temp)&&v.temp>100.4)?`Temp ${v.temp}F`:'Pain or fever reported'} — IV acetaminophen provides non-opioid analgesia and antipyresis.`},
+  // RSI
+  {name:'Etomidate',dose:'0.3 mg/kg (~20mg)',route:'IV/IO rapid push',indication:'RSI induction — airway compromise, GCS <8',
+   notes:'Onset 30-60 sec, duration ~5 min. Preferred in hemodynamically unstable patients — minimal cardiovascular effects.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>r.includes('coll_airway')||r.includes('unconscious'),
+   reason:(v,t,r,e)=>'Airway compromise requiring RSI — etomidate induces rapid sedation for intubation with minimal hemodynamic impact.'},
+  {name:'Rocuronium',dose:'1.2 mg/kg (~100mg)',route:'IV/IO rapid push',indication:'RSI — neuromuscular blockade for intubation',
+   notes:'Push immediately after Etomidate. Onset ~60 sec, duration 45-60 min. Patient requires BVM ventilation until reversal (Sugammadex).',
+   priority:'high',
+   condition:(v,t,r,e,b)=>r.includes('coll_airway')||r.includes('unconscious'),
+   reason:(v,t,r,e)=>'RSI in progress — rocuronium provides neuromuscular blockade within 60 seconds for safe endotracheal intubation.'},
+  // AIRWAY MEDS
+  {name:'Racemic Epinephrine (DL-Epi)',dose:'0.5mL of 2.25% in 2.5mL NS',route:'Nebulized',indication:'Airway edema, croup, anaphylaxis with stridor, asthma, CO2 inhalation',
+   notes:'Administer via nebulizer. Monitor for rebound edema — patient must remain observed for 30+ min. Give IM Epi concurrently for anaphylaxis.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>e.includes('anaphylaxis')||r.includes('blocked_airway')||r.includes('airway_edema')||e.includes('wheezing')||e.includes('co2_inhalation'),
+   reason:(v,t,r,e)=>`${r.includes('airway_edema')?'Airway edema':e.includes('anaphylaxis')?'Anaphylaxis with stridor':e.includes('co2_inhalation')?'CO2 inhalation edema':'Airway compromise'} — racemic epi reduces mucosal edema via alpha-adrenergic vasoconstriction.`},
+  {name:'Albuterol',dose:'2.5mg in 3mL NS',route:'Nebulized',indication:'Bronchospasm, asthma, CO2 inhalation',
+   notes:'Via inline nebulizer. Continuous nebulization appropriate in severe asthma. Also for reactive bronchospasm from smoke/CO2 inhalation.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>e.includes('wheezing')||e.includes('anaphylaxis')||e.includes('co2_inhalation'),
+   reason:(v,t,r,e)=>`${e.includes('co2_inhalation')?'CO2 inhalation causing reactive bronchospasm':e.includes('anaphylaxis')?'Anaphylaxis with bronchospasm':'Active bronchospasm'} — albuterol relaxes bronchial smooth muscle via beta-2 agonism.`},
+  {name:'Magnesium Sulfate',dose:'2g in 100mL NS',route:'IV over 20 min',indication:'Severe / refractory asthma not responding to Albuterol',
+   notes:'Infuse over 20 minutes — rapid push causes hypotension. Requires medical control authorization. Monitor BP and deep tendon reflexes.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>e.includes('wheezing')||e.includes('co2_inhalation'),
+   reason:(v,t,r,e)=>'Bronchospasm present — magnesium causes bronchial smooth muscle relaxation via calcium channel antagonism when Albuterol response is insufficient.'},
+  {name:'Methylprednisolone (Solu-Medrol)',dose:'125mg',route:'IV or IM',indication:'Reactive airway disease, anaphylaxis, allergic reactions, CO2 inhalation',
+   notes:'Give early — anti-inflammatory effect is delayed 4-6 hours. IV push over 1-2 min.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>e.includes('wheezing')||e.includes('allergic')||e.includes('anaphylaxis')||e.includes('co2_inhalation'),
+   reason:(v,t,r,e)=>`${e.includes('anaphylaxis')?'Anaphylaxis':e.includes('co2_inhalation')?'CO2 inhalation airway inflammation':e.includes('wheezing')?'Asthma/bronchospasm':'Allergic reaction'} — steroids reduce airway inflammation; must be given early as onset is delayed.`},
+  // SEIZURE
+  {name:'Midazolam (Versed)',dose:'5mg IV / 10mg IM or IN',route:'IV, IM, or Intranasal',indication:'Active seizure, acute agitation, procedural sedation',
+   notes:'For seizure: 5mg IV or 10mg IM/IN (0.2 mg/kg IN via MAD device). Monitor airway and respiratory rate.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>t.includes('seizure')||e.includes('agitation'),
+   reason:(v,t,r,e)=>`${t.includes('seizure')?'Active seizure':'Acute agitation'} — midazolam enhances GABA inhibition to terminate seizure activity or achieve chemical sedation.`},
+  // NAUSEA
+  {name:'Ondansetron (Zofran)',dose:'4mg IV or 4mg ODT',route:'IV or Sublingual',indication:'Nausea / vomiting',
+   notes:'IV: push over 2-5 min. ODT: place under tongue, dissolves in 30 sec. Repeat once in 30 min if needed. No QTc monitoring required.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>e.includes('nausea'),
+   reason:(v,t,r,e)=>'Nausea/vomiting — ondansetron blocks serotonin 5-HT3 receptors to suppress nausea without sedation or cardiac side effects.'},
+  // NALOXONE
+  {name:'Naloxone (Narcan)',dose:'0.4-2mg',route:'IV/IO or IN',indication:'Suspected opioid overdose with altered LOC / respiratory depression',
+   notes:'Start with 0.4mg IV and titrate to adequate respiratory rate. IN: 2-4mg via MAD. Avoid precipitating acute withdrawal. Duration shorter than most opioids — repeat dosing may be needed.',
+   priority:'high',
+   condition:(v,t,r,e,b)=>e.includes('altered_loc')&&v.rr<10,
+   reason:(v,t,r,e)=>`Altered LOC with respiratory rate ${v.rr} BPM — naloxone reverses opioid-mediated CNS and respiratory depression.`},
+  // ABX
+  {name:'Cefazolin (Ancef)',dose:'2g in 100mL NS',route:'IV over 30 min',indication:'Open fractures, penetrating wounds, evisceration — ABX prophylaxis',
+   notes:'Goal: within 60 min of wound contamination. Verify no penicillin/cephalosporin allergy.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>t.includes('open_fx')||t.includes('gsw_torso')||t.includes('gsw_limb')||t.includes('evisceration')||t.includes('avulsion'),
+   reason:(v,t,r,e)=>`${t.includes('open_fx')?'Open fracture':t.includes('evisceration')?'Evisceration':'Penetrating wound/avulsion'} — prehospital Ancef within 60 minutes significantly reduces deep infection risk.`},
+  // METABOLIC
+  {name:'Dextrose 10% (D10W)',dose:'250mL IV bag',route:'IV wide open',indication:'Hypoglycemia — BGL <70 mg/dL',
+   notes:'Run wide open until BGL >80. Recheck every 15 min. Preferred over D50 prehospital. No IV access: Glucagon 1mg IM.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>!isNaN(v.bgl)&&v.bgl<70,
+   reason:(v,t,r,e)=>`BGL is ${v.bgl} mg/dL — D10W corrects hypoglycemia and prevents irreversible neurological injury from glucose deprivation.`},
+  {name:'Regular Insulin',dose:'10 Units',route:'IV',indication:'Hyperglycemia — BGL >250 mg/dL with DKA signs',
+   notes:'Give with 1L NS bolus. Confirm K+ not critically low before administration. Do not correct faster than 50 mg/dL per hour.',
+   priority:'normal',
+   condition:(v,t,r,e,b)=>!isNaN(v.bgl)&&v.bgl>250,
+   reason:(v,t,r,e)=>`BGL is ${v.bgl} mg/dL — insulin drives glucose into cells and begins reversing the ketoacidotic state.`}
 ];
 
+// =====================================================
+// HELPERS
+// =====================================================
 const p  = t => `<span class="pill">${t}</span>`;
-const rp = t => `<span class="rp-note">${t}</span>`;
 const s  = h => `<div class="step"><span>${h}</span></div>`;
 const sl = t => `<span class="sub-label">${t}</span>`;
 
 function block(title, steps, variant) {
-    variant = variant || '';
-    const tags = {critical:`<span class="proto-tag tag-critical">Critical</span>`,alert:`<span class="proto-tag tag-alert">Alert</span>`,'':`<span class="proto-tag tag-std">Protocol</span>`};
-    return `<div class="protocol-block ${variant}"><div class="protocol-header"><div class="protocol-title">${title}</div>${tags[variant]||tags['']}</div><div class="protocol-body">${steps.join('')}</div></div>`;
+  variant = variant||'';
+  const tags={critical:`<span class="proto-tag tag-critical">Critical</span>`,alert:`<span class="proto-tag tag-alert">Alert</span>`,'':`<span class="proto-tag tag-std">Protocol</span>`};
+  return `<div class="protocol-block ${variant}"><div class="protocol-header"><div class="protocol-title">${title}</div>${tags[variant]||tags['']}</div><div class="protocol-body">${steps.join('')}</div></div>`;
+}
+function cardWrap(inner){
+  return `<div class="card-header"><div class="card-header-dot"></div><h2>MDFR Clinical Treatment Plan</h2></div><div class="card-body">${inner}</div>`;
 }
 
-function cardWrap(inner) {
-    return `<div class="card-header"><div class="card-header-dot"></div><h2>MDFR Clinical Treatment Plan</h2></div><div class="card-body">${inner}</div>`;
-}
-
+// =====================================================
+// MAIN
+// =====================================================
 function generatePlan() {
-    const output = document.getElementById('output');
-    const v = {
-        pulse: parseInt(document.getElementById('pulse').value),
-        bp:    parseInt(document.getElementById('bp').value),
-        rr:    parseInt(document.getElementById('rr').value),
-        spo2:  parseInt(document.getElementById('spo2').value),
-        bgl:   parseInt(document.getElementById('bgl').value),
-        temp:  parseFloat(document.getElementById('temp').value)
-    };
+  const output = document.getElementById('output');
+  const v = {
+    pulse: parseInt(document.getElementById('pulse').value),
+    bp:    parseInt(document.getElementById('bp').value),
+    rr:    parseInt(document.getElementById('rr').value),
+    spo2:  parseInt(document.getElementById('spo2').value),
+    bgl:   parseInt(document.getElementById('bgl').value),
+    temp:  parseFloat(document.getElementById('temp').value)
+  };
 
-    if (isNaN(v.pulse)||isNaN(v.bp)||isNaN(v.rr)||isNaN(v.spo2)) {
-        output.innerHTML = cardWrap(`<div class="error-box">INCOMPLETE -- Enter all required vital signs (Pulse, BP, RR, SpO2) before processing.</div>`);
-        return;
+  if (isNaN(v.pulse)||isNaN(v.bp)||isNaN(v.rr)||isNaN(v.spo2)) {
+    output.innerHTML = cardWrap(`<div class="error-box">INCOMPLETE -- Enter all required vital signs (Pulse, BP, RR, SpO2) before processing.</div>`);
+    return;
+  }
+
+  const trauma = Array.from(document.querySelectorAll('#trauma_list input:checked')).map(i=>i.value);
+  const burns  = Array.from(document.querySelectorAll('#burn_list input:checked')).map(i=>i.value);
+  const resp   = Array.from(document.querySelectorAll('#resp_list input:checked')).map(i=>i.value);
+  const extra  = Array.from(document.querySelectorAll('#extra_list input:checked')).map(i=>i.value);
+
+  const isArrest = v.pulse===0||trauma.includes('arrest');
+  const isTraumaticArrest = isArrest&&(trauma.includes('gsw_torso')||trauma.includes('massive_bleed')||trauma.includes('gsw_limb')||trauma.includes('pelvic_fx'));
+  const hasInternalBleed = trauma.includes('gsw_torso')||trauma.includes('massive_bleed')||trauma.includes('evisceration')||trauma.includes('abd_tender')||trauma.includes('pelvic_fx');
+  const hasExternalBleed = trauma.includes('gsw_limb')||trauma.includes('laceration')||trauma.includes('avulsion');
+
+  let html = '';
+
+  // 1. OXYGEN PROTOCOL
+  if (!isNaN(v.spo2) && (v.spo2 < 95 || v.rr > 24 || resp.includes('blocked_airway') || resp.includes('airway_edema') || resp.includes('coll_lung') || resp.includes('tension') || resp.includes('unconscious') || resp.includes('coll_airway'))) {
+    let oSteps = [];
+    if (v.spo2 >= 94 && v.rr <= 24) {
+      oSteps.push(s(`SpO2 ${v.spo2}% with elevated respiratory rate — place ${p('Nasal Cannula at 2-4L/min')} and monitor closely. Reassess every 5 minutes.`));
+    } else if (v.spo2 >= 90) {
+      oSteps.push(s(`SpO2 ${v.spo2}% — apply ${p('Simple Face Mask at 5-8L/min')} (delivers FiO2 ~40-60%). Reassess every 5 min — escalate to NRB if SpO2 does not improve above 94%.`));
+    } else if (v.spo2 >= 85) {
+      oSteps.push(s(`SpO2 ${v.spo2}% — apply ${p('Non-Rebreather Mask (NRB) at 10-15L/min')} (delivers FiO2 ~70-90%). Flush reservoir bag before placement. Reassess every 3 min — prepare BVM if no improvement.`));
+    } else {
+      oSteps.push(s(`SpO2 ${v.spo2}% — CRITICAL HYPOXIA. Apply ${p('BVM with O2 at 15L/min')} and initiate assisted ventilations. Prepare for advanced airway immediately.`));
+    }
+    if (v.rr > 30) oSteps.push(s(`Respiratory rate ${v.rr} — high work of breathing. Escalate to NRB 15L/min regardless of SpO2. Prepare BVM and advanced airway equipment.`));
+    if (v.rr < 8 && v.rr > 0) oSteps.push(s(`Respiratory rate ${v.rr} — hypoventilation. Assist ventilations with ${p('BVM at 10-12 breaths/min')}. Prepare for RSI.`));
+    html += block(`Oxygen Delivery — SpO2 ${v.spo2}%`, oSteps, v.spo2 < 85 ? 'critical' : 'alert');
+  }
+
+  // 2. TRAUMA & HEMORRHAGE
+  if (hasInternalBleed || hasExternalBleed) {
+    let steps = [];
+    if (isTraumaticArrest) steps.push(s(`PRIORITY: Reversing hemorrhage takes precedence over standard ACLS compressions.`));
+
+    if (trauma.includes('gsw_torso')) {
+      steps.push(sl('Penetrating Torso Trauma'));
+      steps.push(s('Log-roll and inspect for exit wounds. Count all wounds.'));
+      steps.push(s(`Apply ${p('Vented Occlusive Chest Seal')} to all entry and exit wounds. Vented seal preferred over non-vented to prevent tension pneumo.`));
+    }
+    if (trauma.includes('gsw_limb')||trauma.includes('laceration')) {
+      steps.push(sl('External Hemorrhage Control'));
+      steps.push(s('Apply tourniquet HIGH and TIGHT (5-7cm above wound) for arterial limb bleeds. Document application time.'));
+      steps.push(s(`Pack cavity wounds with ${p('Hemostatic Gauze (QuikClot)')} and apply direct pressure for a minimum of 3 minutes.`));
+    }
+    if (trauma.includes('evisceration')) {
+      steps.push(sl('Evisceration'));
+      steps.push(s(`Do NOT replace organs. Cover with ${p('Moist Sterile Gauze')} and an occlusive dressing. Keep moist and warm throughout transport.`));
+    }
+    if (trauma.includes('avulsion')) {
+      steps.push(sl('Avulsion / Degloving'));
+      steps.push(s('Do NOT discard avulsed tissue. Wrap loosely in moist sterile gauze and place in a sealed bag. Do NOT put tissue directly on ice.'));
+      steps.push(s(`Control hemorrhage with ${p('Pressure Dressing')}. Tourniquet if arterial and on a limb.`));
+      steps.push(s('Degloving wounds: cover the entire exposed area with moist sterile dressings. Do NOT attempt to replace degloved skin.'));
+    }
+    if (trauma.includes('abd_tender')) {
+      steps.push(sl('Abdominal Tenderness — Suspected Internal Hemorrhage'));
+      steps.push(s('Keep patient NPO (nothing by mouth). Position supine with knees slightly flexed to reduce peritoneal tension.'));
+      steps.push(s('Serial abdominal assessments every 5 minutes — note any change in rigidity, guarding, or distension.'));
+      steps.push(s(`Establish large-bore IV access. Initiate ${p('NS 500mL bolus')} and reassess. Internal hemorrhage suspected — prepare TXA.`));
     }
 
-    const trauma = Array.from(document.querySelectorAll('#trauma_list input:checked')).map(i=>i.value);
-    const resp   = Array.from(document.querySelectorAll('#resp_list input:checked')).map(i=>i.value);
-    const extra  = Array.from(document.querySelectorAll('#extra_list input:checked')).map(i=>i.value);
-
-    const isArrest = v.pulse===0||trauma.includes('arrest');
-    const isTraumaticArrest = isArrest&&(trauma.includes('gsw_torso')||trauma.includes('massive_bleed')||trauma.includes('gsw_limb'));
-    const hasHemorrhage = ['gsw_torso','gsw_limb','massive_bleed','evisceration','laceration'].some(x=>trauma.includes(x));
-
-    let html = '';
-
-    // TRAUMA & HEMORRHAGE
-    if (hasHemorrhage) {
-        let steps = [];
-        if (isTraumaticArrest) steps.push(s(`<strong>PRIORITY:</strong> Reversing hemorrhage takes precedence over standard ACLS compressions.`));
-
-        if (trauma.includes('gsw_torso')) {
-            steps.push(sl('Torso Trauma'));
-            steps.push(s(`Log-roll and inspect for EXIT WOUNDS. ${rp('(-Rolls patient-)')}`));
-            steps.push(s(`Apply ${p('Vented Occlusive Chest Seal')} to all entry and exit wounds.`));
-        }
-        if (trauma.includes('gsw_limb')||trauma.includes('massive_bleed')) {
-            steps.push(sl('Hemorrhage Control'));
-            steps.push(s('Apply tourniquet HIGH and TIGHT (5-7cm above wound) for arterial limb bleeds. Document time.'));
-            steps.push(s(`Pack junctional/cavity wounds with ${p('Hemostatic Gauze (QuikClot)')}. Direct pressure for minimum 3 minutes.`));
-        }
-        if (trauma.includes('evisceration')) {
-            steps.push(sl('Evisceration'));
-            steps.push(s(`Do NOT replace organs. Cover with ${p('Moist Sterile Gauze')} and occlusive dressing. Keep moist and warm.`));
-        }
-        if (trauma.includes('laceration')) {
-            steps.push(sl('Laceration'));
-            steps.push(s(`Irrigate with ${p('NS')}. Apply ${p('Pressure Dressing')} and elevate limb. ${rp('(-Binds wound-)')}`));
-        }
-
-        steps.push(sl('Systemic Circulation Support'));
-        const hasTXAIndication = trauma.includes('gsw_torso')||trauma.includes('massive_bleed')||trauma.includes('evisceration');
-        if (hasTXAIndication) {
-            steps.push(s(`Infuse ${p('TXA 1g in 100mL NS')} over 10 minutes. Must be within 3 hours of injury. <strong>TXA is indicated ONLY for internal or non-compressible hemorrhage</strong> -- do NOT give for external wounds with tourniquet or dressing in place.`));
-        } else {
-            steps.push(s(`TXA not indicated -- hemorrhage appears externally controlled. Reassess if internal injury suspected.`));
-        }
-        if (v.bp<90||isTraumaticArrest) {
-            steps.push(s(`Initiate ${p('Whole Blood')} transfusion via 14g IV. Permissive hypotension -- target SBP 80-90 in penetrating trauma.`));
-            steps.push(s(`Warm IV fluids and apply thermal blanket. Prevent hypothermia. ${rp('(-Wraps patient-)')}`));
-            steps.push(s(`Push ${p('Calcium Gluconate 1g')} slow IV push over 3 min.`));
-        }
-        html += block('Trauma & Hemorrhage Control', steps, isTraumaticArrest?'critical':'');
+    if (hasInternalBleed && !isArrest) {
+      steps.push(sl('Systemic Hemorrhage Control — INTERNAL ONLY'));
+      steps.push(s(`Administer ${p('TXA 1g in 100mL NS')} over 10 minutes. TXA is ONLY for internal or non-compressible hemorrhage. Do NOT give for wounds with tourniquet or dressing in place.`));
     }
-
-    // MASSIVE TRANSFUSION PROTOCOL
-    if (trauma.includes('massive_bleed')||(trauma.includes('gsw_torso')&&(v.bp<90||isTraumaticArrest))) {
-        html += block('Massive Transfusion Protocol (MTP)', [
-            s(`Activate MTP. Call medical control and receiving hospital for blood product preparation. Target 1:1:1 ratio: ${p('1 unit pRBC')} : ${p('1 unit FFP')} : ${p('1 unit Platelets')}.`),
-            s(`Establish TWO large-bore IV lines (14g or 16g). Place one in antecubital, one in external jugular or IO if peripheral access fails.`),
-            s(`Hang ${p('Whole Blood or pRBCs')} immediately. Use pressure bag or rapid infuser (Level 1 / Belmont). Do NOT wait for a type-and-cross -- use O-negative universal donor blood prehospital.`),
-            sl('Prevent the Lethal Triad'),
-            s(`ACIDOSIS -- Push ${p('Sodium Bicarbonate 1 mEq/kg')} if arrest or prolonged hypoperfusion. Bicarbonate corrects metabolic acidosis impairing coagulation and cardiac function.`),
-            s(`HYPOTHERMIA -- Warm ALL IV fluids. Apply ${p('Thermal Blanket')}. Core temp below 35C drastically worsens coagulopathy. ${rp('(-Wraps patient-)')}`),
-            s(`COAGULOPATHY -- Push ${p('Calcium Gluconate 1g IV')} with each unit of blood product. Citrate in stored blood chelates calcium -- ionized hypocalcemia causes cardiac depression.`),
-            sl('MTP Medications'),
-            s(`${p('TXA 1g in 100mL NS')} over 10 min if internal hemorrhage confirmed and within 3 hours of injury. Internal bleed only.`),
-            s(`${p('Calcium Gluconate 1g')} after every 4 units of blood product, or sooner if patient shows signs of hypocalcemia (hypotension, prolonged QT, tetany).`),
-            s(`Reassess BP every 2-3 minutes. Goal: SBP 80-90 in penetrating trauma (permissive hypotension) until definitive hemorrhage control at hospital.`),
-            s(`Notify receiving trauma center with estimated blood products given, mechanism, and current hemodynamic status.`)
-        ], 'critical');
+    if (v.bp<90||isTraumaticArrest) {
+      steps.push(sl('Hemorrhagic Shock Resuscitation'));
+      steps.push(s(`Initiate ${p('NS/LR 500mL bolus')} immediately. Permissive hypotension strategy in penetrating trauma — target SBP 80-90 until definitive hemorrhage control.`));
+      steps.push(s(`Hang ${p('O-negative Whole Blood or pRBCs')} via 14g IV. Use pressure bag or rapid infuser.`));
+      steps.push(s('Warm all IV fluids. Apply thermal blanket — hypothermia below 35C drastically worsens coagulopathy.'));
+      steps.push(s(`Push ${p('Calcium Gluconate 1g')} slow IV over 3 min with each unit of blood product.`));
     }
+    html += block('Trauma & Hemorrhage Control', steps, isTraumaticArrest?'critical':'');
+  }
 
-    // CARDIAC ARREST
-    if (isArrest) {
-        html += block('Cardiac Arrest -- ACLS Protocol', [
-            s('Initiate high-quality chest compressions at 100-120 BPM. Allow FULL chest recoil. Minimize interruptions. Rotate compressors every 2 min.'),
-            s(`Attach monitor/AED pads to bare chest. Analyze rhythm immediately. ${rp('(-Applies pads-)')}`),
-            s(`Establish IV or IO access. Push ${p('Epinephrine 1mg (1:10,000)')} every 3-5 min. Follow each dose with 20mL NS flush.`),
-            s(`IF SHOCKABLE (VF/Pulseless VT): Charge 200J biphasic -- clear -- shock -- resume CPR immediately. After 3rd shock: push ${p('Amiodarone 300mg')}.`),
-            s('IF NON-SHOCKABLE (Asystole/PEA): Do NOT shock. Continue CPR. Identify reversible causes (Hs and Ts): hypovolemia, hypoxia, acidosis, hypothermia, tension pneumo, tamponade, toxins, thrombosis.'),
-            s(`Airway: insert ${p('Supraglottic Airway')} or intubate per RSI protocol. Ventilate 1 breath every 6 sec without pausing compressions.`)
-        ], 'critical');
+  // 3. PELVIC FRACTURE
+  if (trauma.includes('pelvic_fx')) {
+    html += block('Pelvic Fracture Protocol', [
+      s(`Apply ${p('Pelvic Binder')} at the level of the greater trochanters immediately. Do NOT apply at the iliac crests — this widens the pelvis instead of closing it.`),
+      s('Do NOT log-roll patient with pelvic fracture — maintains clot formation. Use scoop stretcher for transfer.'),
+      s(`Establish two large-bore IV lines (14g). Initiate ${p('NS 500mL bolus')} and reassess BP.`),
+      s(`Administer ${p('TXA 1g in 100mL NS')} over 10 min — pelvic fracture is a non-compressible internal hemorrhage.`),
+      s(`Administer ${p('Ketamine 0.3-0.5 mg/kg IV')} for pain over 10 min. Pelvic fractures are severely painful and movement causes further blood loss.`),
+      s('Monitor for peritoneal signs and hemodynamic deterioration — internal pelvic hemorrhage can be rapidly fatal.')
+    ], 'critical');
+  }
+
+  // 4. CARDIAC ARREST
+  if (isArrest) {
+    html += block('Cardiac Arrest -- ACLS Protocol', [
+      s('Initiate high-quality chest compressions at 100-120 BPM. Allow FULL chest recoil between compressions. Minimize ALL interruptions. Rotate compressors every 2 min.'),
+      s(`Apply monitor/defibrillator pads to bare chest. Analyze rhythm immediately without interrupting compressions.`),
+      s(`Establish IV or IO access. Push ${p('Epinephrine 1mg (1:10,000)')} every 3-5 min. Follow each dose with 20mL NS flush.`),
+      s(`IF SHOCKABLE (VF / Pulseless VT): Charge 200J biphasic, clear patient, deliver shock, resume CPR immediately. After 3rd shock: push ${p('Amiodarone 300mg')}.`),
+      s('IF NON-SHOCKABLE (Asystole / PEA): Do NOT shock. Continue CPR. Identify and treat reversible causes (Hs & Ts): Hypovolemia, Hypoxia, H+ Acidosis, Hypothermia, Tension pneumo, Tamponade, Toxins, Thrombosis.'),
+      s(`Insert ${p('Supraglottic Airway')} or intubate per RSI protocol. Ventilate 1 breath every 6 seconds without pausing compressions.`)
+    ], 'critical');
+  }
+
+  // 5. AIRWAY & RESPIRATORY MANAGEMENT
+  const hasAirway = resp.length>0||burns.includes('burn_inhalation')||trauma.includes('flail_chest');
+  if (hasAirway) {
+    let steps = [];
+
+    if (trauma.includes('flail_chest')) {
+      steps.push(sl('Flail Chest'));
+      steps.push(s(`Stabilize flail segment with large bulky dressing and tape.`));
+      steps.push(s('Provide positive pressure ventilation via BVM if respiratory failure is present. Prepare for intubation.'));
     }
-
-    // AIRWAY & RESPIRATORY
-    const hasAirway = resp.length>0||trauma.includes('burns')||trauma.includes('flail_chest');
-    if (hasAirway) {
-        let steps = [];
-        if (trauma.includes('burns')) {
-            steps.push(sl('Major Burns'));
-            steps.push(s(`Remove smoldering clothing and jewelry. Cover burns with ${p('Dry Sterile Dressings')} -- no wet dressings on large burns.`));
-            steps.push(s('Watch for inhalation injury: hoarseness, singed nasal hairs, carbonaceous sputum -- intubate early if suspected.'));
-        }
-        if (trauma.includes('flail_chest')) {
-            steps.push(sl('Flail Chest'));
-            steps.push(s(`Stabilize flail segment with bulky dressing. ${rp('(-Secures segment-)')} Provide BVM ventilation if respiratory failure present.`));
-        }
-        if (resp.includes('blocked_airway')) {
-            steps.push(sl('Airway Obstruction'));
-            steps.push(s(`Use ${p('McGill Forceps')} under direct laryngoscopy for solid obstructions. ${rp('(-Clears airway-)')}`));
-            steps.push(s(`Apply ${p('Yankauer Suction')} for blood, vomit, secretions. Max 10-second intervals.`));
-        }
-        if (resp.includes('coll_lung')||resp.includes('tension')) {
-            steps.push(sl('Tension Pneumothorax'));
-            steps.push(s(`Perform ${p('Needle Decompression')}: 14g angiocath at 2nd ICS, MCL. Listen for rush of air. Leave catheter in place. ${rp('(-Relieves tension-)')}`));
-        }
-        if (resp.includes('coll_airway')||resp.includes('unconscious')) {
-            steps.push(sl('Rapid Sequence Intubation (RSI)'));
-            steps.push(s(`Pre-oxygenate with ${p('NRB Mask')} at 15L/min for 3 min. Have suction and backup airway ready.`));
-            steps.push(s(`Push ${p('Etomidate 0.3 mg/kg (~20mg) IV')} rapid push. Immediately follow with ${p('Rocuronium 1.2 mg/kg (~100mg) IV')}.`));
-            steps.push(s(`Apply Sellick maneuver. At jaw relaxation (~60 sec), visualize cords and insert ${p('7.5-8.0mm ET Tube')}. ${rp('(-Inserts ET tube-)')}`));
-            steps.push(s(`Confirm: bilateral breath sounds + ${p('ETCO2 waveform')} (target 35-45 mmHg). Secure tube and document depth.`));
-        }
-        if (resp.includes('iv_fail')) {
-            steps.push(sl('Intraosseous (IO) Access'));
-            steps.push(s(`Establish ${p('EZ-IO')} at proximal tibia or humeral head. Confirm by aspirating marrow.`));
-            steps.push(s(`In conscious patients: push ${p('Lidocaine 2% -- 40mg IO')} before fluid infusion to reduce pain.`));
-        }
-        html += block('Airway & Respiratory Management', steps, 'alert');
+    if (burns.includes('burn_inhalation')) {
+      steps.push(sl('Inhalation Burn'));
+      steps.push(s(`Apply ${p('100% NRB Mask at 15L/min')} immediately. Inhalation injuries cause progressive airway edema — intubate EARLY before the airway closes.`));
+      steps.push(s('Signs requiring immediate RSI: hoarseness, stridor, singed nasal hairs, carbonaceous sputum, progressive swelling, increasing respiratory distress.'));
     }
-
-    // ANAPHYLAXIS
-    if (extra.includes('anaphylaxis')) {
-        html += block('Anaphylaxis Protocol', [
-            s(`Administer ${p('Epinephrine 1:1000 -- 0.3mg IM')} into lateral thigh immediately. FIRST-LINE -- do NOT delay for IV access.`),
-            s(`Establish IV access. Push ${p('NS 1L IV bolus')} for hypotension.`),
-            s(`Administer ${p('Diphenhydramine (Benadryl) 50mg IV')} slow push for H1 blockade.`),
-            s(`Administer ${p('Methylprednisolone 125mg IV')} to prevent delayed-phase anaphylaxis.`),
-            s(`If stridor or upper airway edema: administer ${p('Racemic Epinephrine')} nebulized. Prepare for intubation -- anaphylactic edema can obstruct rapidly.`),
-            s(`If bronchospasm: administer ${p('Albuterol 2.5mg')} nebulized.`)
-        ], 'critical');
+    if (resp.includes('blocked_airway')) {
+      steps.push(sl('Airway Obstruction'));
+      steps.push(s(`Use ${p('Suction catheter tip')} to clear blood, secretions, and soft material. Suction in 10-second intervals maximum.`));
+      steps.push(s(`Use ${p('Magill Forceps')} under direct laryngoscopy to remove solid visible objects from the oropharynx.`));
     }
-
-    // WHEEZING / ASTHMA / CO2 / SYNCOPE
-    if (extra.includes('wheezing')||extra.includes('co2_inhalation')||extra.includes('syncope')) {
-        let steps = [];
-
-        if (extra.includes('co2_inhalation')) {
-            steps.push(sl('CO2 / Smoke Inhalation'));
-            steps.push(s(`Remove patient from source immediately. Apply ${p('100% NRB mask')} at 15L/min -- high-flow O2 displaces CO from hemoglobin.`));
-            steps.push(s(`Expect reactive bronchospasm and upper airway edema -- treat as below. Monitor SpO2 and ETCO2; pulse ox may read falsely normal with carboxyhemoglobin.`));
-            steps.push(s(`If GCS drops or SpO2 < 90%: prepare for RSI. Intubate early -- airway edema from inhalation injury can close rapidly.`));
-            steps.push(s(`Administer ${p('Racemic Epinephrine')} nebulized for mucosal edema. Administer ${p('Albuterol 2.5mg')} for bronchospasm. Administer ${p('Methylprednisolone 125mg IV')} for inflammation.`));
-        }
-
-        if (extra.includes('syncope')) {
-            steps.push(sl('Syncope'));
-            steps.push(s('Position patient supine with legs elevated (Trendelenburg) -- increases cerebral perfusion. Obtain 12-lead EKG immediately.'));
-            steps.push(s(`Check ${p('Fingerstick BGL')} -- hypoglycemia is a common and reversible syncope cause.`));
-            steps.push(s(`Assess for cardiac cause: ${v.pulse<50?'bradycardia (pulse '+v.pulse+' BPM -- treat per bradycardia protocol)':v.pulse>150?'tachyarrhythmia (pulse '+v.pulse+' BPM -- treat per SVT protocol)':'normal rate, evaluate rhythm on 12-lead'}.`));
-            steps.push(s('Vasovagal syncope (most common): patient positioned supine, warm and reassured. Transport for workup. Do NOT allow patient to stand or ambulate.'));
-            steps.push(s('If syncope with trauma (head strike, fall): treat as traumatic injury. Apply cervical collar if mechanism warrants.'));
-        }
-
-        if (extra.includes('wheezing')) {
-            steps.push(sl('Bronchospasm / Asthma'));
-            steps.push(s(`Position patient upright. Apply ${p('NRB mask')} at 15L/min if SpO2 < 94%.`));
-            steps.push(s(`Administer ${p('Albuterol 2.5mg')} via inline nebulizer. Repeat every 20 min or run continuously in severe cases.`));
-            steps.push(s(`Administer ${p('Racemic Epinephrine (DL-Epi)')} nebulized for upper airway component or refractory bronchospasm -- reduces mucosal edema alongside Albuterol.`));
-            steps.push(s(`Administer ${p('Methylprednisolone 125mg IV')} -- particularly important if no response after 2 Albuterol treatments.`));
-            steps.push(s(`If still refractory: administer ${p('Magnesium Sulfate 2g in 100mL NS')} over 20 min via medical control authorization. Smooth muscle relaxant via calcium channel antagonism.`));
-            steps.push(s('Prepare for RSI if patient fatigues, ETCO2 rises, or GCS drops.'));
-        }
-
-        html += block('Respiratory / Asthma / Inhalation Protocol', steps, 'alert');
+    if (resp.includes('airway_edema')) {
+      steps.push(sl('Swollen / Edematous Airway'));
+      steps.push(s(`Administer ${p('Racemic Epinephrine (DL-Epi)')} nebulized immediately — reduces mucosal edema via alpha-adrenergic vasoconstriction. This is a temporizing measure.`));
+      steps.push(s(`Administer ${p('Methylprednisolone 125mg IV')} and ${p('Diphenhydramine 50mg IV')} if allergic/anaphylactic cause.`));
+      steps.push(s('If edema is progressing and patient is deteriorating: proceed immediately to RSI. Awake intubation preferred if patient is cooperative — the swollen airway becomes increasingly difficult to intubate.'));
+      steps.push(s(`Backup plan if intubation fails: ${p('Surgical Cricothyrotomy')} — scalpel incision through cricothyroid membrane, insert cuffed tube. This is the definitive rescue airway.`));
     }
-
-    // SVT
-    if (extra.includes('svt')&&!isArrest) {
-        html += block('SVT -- Conversion Protocol', [
-            s('Obtain 12-lead EKG. Confirm narrow-complex SVT. Do NOT give Adenosine for wide-complex tachycardia.'),
-            s(`Attempt vagal maneuver: Modified Valsalva -- bear down 15 sec then passive leg raise. ${rp('(-Instructs patient-)')}`),
-            s(`If no conversion: push ${p('Adenosine 6mg RAPID IV')} (1-2 sec) into antecubital vein. Immediately follow with 20mL NS rapid flush.`),
-            s(`If no response in 2 min: push ${p('Adenosine 12mg')} same technique.`),
-            s(`If Afib/Flutter or Adenosine fails: administer ${p('Diltiazem 0.25 mg/kg IV')} slow push over 2 min (confirm BP > 90 first).`),
-            s('If hemodynamically UNSTABLE: synchronized cardioversion at 50-100J.')
-        ]);
+    if (resp.includes('coll_lung')||resp.includes('tension')) {
+      steps.push(sl('Tension Pneumothorax'));
+      steps.push(s(`Perform ${p('Needle Decompression')}: 14g angiocath at 2nd ICS mid-clavicular line OR 4th/5th ICS anterior axillary line. Listen for rush of air. Leave catheter in place.`));
+      steps.push(s('After decompression, prepare for finger thoracostomy or chest tube at receiving facility. Apply occlusive dressing to entry wound.'));
     }
-
-    // AFIB
-    if (extra.includes('afib')&&!isArrest) {
-        html += block('Atrial Fibrillation / Flutter Protocol', [
-            s('Obtain 12-lead EKG. Confirm Afib or A-Flutter. Assess hemodynamic stability.'),
-            s(`If STABLE (BP >= 90): administer ${p('Diltiazem 0.25 mg/kg IV')} slow push over 2 min. Goal rate < 110 BPM.`),
-            s(`If UNSTABLE (BP < 90, AMS): sedate with ${p('Midazolam 2-5mg IV')} then perform synchronized cardioversion at 200J biphasic.`)
-        ]);
+    if (resp.includes('coll_airway')||resp.includes('unconscious')) {
+      steps.push(sl('Rapid Sequence Intubation (RSI)'));
+      steps.push(s(`Pre-oxygenate with ${p('NRB Mask at 15L/min')} for 3 minutes. Have suction tip, backup supraglottic airway, and cricothyrotomy kit immediately available.`));
+      steps.push(s(`Push ${p('Etomidate 0.3 mg/kg (~20mg) IV')} rapid push. Immediately follow with ${p('Rocuronium 1.2 mg/kg (~100mg) IV')}.`));
+      steps.push(s(`Apply cricoid pressure (Sellick maneuver). At jaw relaxation (~60 sec), visualize cords with laryngoscope and advance ${p('7.5-8.0mm ET tube')}.`));
+      steps.push(s(`Confirm placement: bilateral breath sounds + ${p('ETCO2 waveform capnography')} (target 35-45 mmHg). Secure tube and document cm depth.`));
+      steps.push(s('If intubation fails twice: insert supraglottic airway. If that fails: surgical cricothyrotomy.'));
     }
-
-    // CHEST PAIN
-    if (trauma.includes('chest_pain')) {
-        html += block('Cardiac Chest Pain / AMI Protocol', [
-            s(`Obtain and transmit ${p('12-lead EKG')} immediately. Note acquisition time. ${rp('(-Attaches leads-)')}`),
-            s(`Have patient CHEW ${p('Aspirin 324mg')} completely.`),
-            s(`Administer ${p('Nitroglycerin 0.4mg SL')} every 5 min up to 3 doses. Withhold if BP < 100 or PDE-5 inhibitor use.`),
-            s(`If STEMI confirmed with PCI center > 120 min away: contact medical control regarding ${p('Tenecteplase')} fibrinolysis.`),
-            s('Continuous 12-lead monitoring throughout transport. Treat arrhythmias per ACLS.')
-        ]);
+    if (resp.includes('iv_fail')) {
+      steps.push(sl('Intraosseous (IO) Access'));
+      steps.push(s(`Establish ${p('EZ-IO')} at proximal tibia or humeral head. Confirm placement by aspirating marrow.`));
+      steps.push(s(`In conscious patients: push ${p('2% Lidocaine 40mg IO')} before fluid infusion to reduce IO pain.`));
     }
+    html += block('Airway & Respiratory Management', steps, 'alert');
+  }
 
-    // STROKE with VAN
-    if (extra.includes('stroke')) {
-        html += block('Stroke Protocol -- Cincinnati + VAN Assessment', [
-            s('Establish LAST KNOWN WELL time immediately -- determines thrombolytic eligibility (window: < 4.5 hours).'),
-            sl('Cincinnati Stroke Scale (CSC)'),
-            s(`FACIAL DROOP: Ask patient to show teeth or smile -- is one side drooping? ${rp('(-Observes face-)')}`),
-            s(`ARM DRIFT: Arms out palms up, eyes closed for 10 sec -- does one arm drift down? ${rp('(-Observes arms-)')}`),
-            s(`SPEECH: "You can't teach an old dog new tricks" -- slurred, wrong words, or unable to speak? ${rp('(-Listens to speech-)')}`),
-            s('One or more abnormal = 72% probability of stroke. Notify hospital immediately.'),
-            sl('VAN Assessment (Large Vessel Occlusion Screen)'),
-            s(`VISION: Sudden loss of vision in one or both eyes, double vision, or gaze deviation? Large vessel occlusion (LVO) sign. ${rp('(-Checks pupils and gaze-)')}`),
-            s(`APHASIA: Unable to speak or understand language? Ask: "What is your name? What city are we in?" Expressive or receptive aphasia = LVO sign.`),
-            s(`NEGLECT: Unaware of one side of body? Ignores stimuli on one side? Extinction to double simultaneous stimulation? = LVO sign.`),
-            s('VAN POSITIVE (any 1 present) = probable large vessel occlusion. Pre-notify receiving hospital for POSSIBLE THROMBECTOMY -- this changes destination if a thrombectomy center is available.'),
-            sl('Supportive Care'),
-            s('Maintain SpO2 > 94% -- O2 only if hypoxic. Hyperoxia worsens ischemic injury.'),
-            s(`Check ${p('Fingerstick BGL')} -- hypoglycemia mimics stroke. Treat if BGL < 60 with D10W.`),
-            s('Transport CODE 3 to nearest Stroke/Thrombectomy Center. Pre-notify with CSC results, VAN result, last known well time, and current vitals.')
-        ], 'alert');
+  // 6. ANAPHYLAXIS
+  if (extra.includes('anaphylaxis')) {
+    html += block('Anaphylaxis Protocol', [
+      s(`Administer ${p('Epinephrine 1:1000 -- 0.3mg IM')} into the vastus lateralis (outer thigh) immediately. This is FIRST-LINE -- do NOT delay for IV access.`),
+      s(`Establish large-bore IV. Push ${p('NS 1L bolus')} for hypotension.`),
+      s(`Administer ${p('Diphenhydramine (Benadryl) 50mg IV')} slow push -- H1 receptor blockade.`),
+      s(`Administer ${p('Methylprednisolone 125mg IV')} to reduce delayed biphasic reaction (onset delayed 4-6 hours).`),
+      s(`If stridor or upper airway edema: administer ${p('Racemic Epinephrine')} nebulized immediately. Prepare for RSI -- anaphylactic airway edema can close within minutes.`),
+      s(`If bronchospasm: administer ${p('Albuterol 2.5mg')} nebulized.`),
+      s(`If hemodynamically unstable after 1L NS bolus: initiate ${p('Norepinephrine infusion')} -- anaphylaxis depletes endogenous catecholamines.`)
+    ], 'critical');
+  }
+
+  // 7. ASTHMA / CO2 / SYNCOPE
+  const hasRespPres = extra.includes('wheezing')||extra.includes('co2_inhalation')||extra.includes('syncope');
+  if (hasRespPres) {
+    let steps = [];
+    if (extra.includes('co2_inhalation')) {
+      steps.push(sl('CO2 / Smoke Inhalation'));
+      steps.push(s(`Remove patient from environment. Apply ${p('100% NRB Mask at 15L/min')} -- high-flow O2 displaces CO from hemoglobin.`));
+      steps.push(s('Pulse oximetry may read falsely normal with carboxyhemoglobin. Trust clinical presentation over SpO2 number alone.'));
+      steps.push(s('Expect reactive bronchospasm and progressive upper airway edema -- treat simultaneously with bronchodilators and racemic epi.'));
+      steps.push(s(`If GCS drops, SpO2 falls, or stridor develops: proceed to RSI immediately. ${p('Etomidate + Rocuronium')} per RSI protocol.`));
+      steps.push(s(`Administer ${p('Albuterol 2.5mg')} nebulized for bronchospasm. ${p('Racemic Epinephrine')} for mucosal edema. ${p('Methylprednisolone 125mg IV')} for inflammation.`));
     }
-
-    // BRADYCARDIA
-    if (v.pulse>0&&v.pulse<50) {
-        html += block('Symptomatic Bradycardia Protocol', [
-            s('Obtain 12-lead EKG. Confirm rhythm and degree of block.'),
-            s(`Administer ${p('Atropine 0.5mg rapid IV')}. Repeat every 3-5 min up to max 3mg total.`),
-            s(`If no response: initiate ${p('Transcutaneous Pacing (TCP)')}. Set rate 60-80 BPM. Increase mA until capture confirmed.`),
-            s(`Once pacing: administer ${p('Midazolam 2-5mg IV')} for discomfort if hemodynamics allow.`)
-        ], 'alert');
+    if (extra.includes('syncope')) {
+      steps.push(sl('Syncope'));
+      steps.push(s('Position supine with legs elevated -- increases cerebral perfusion. Obtain 12-lead EKG immediately.'));
+      steps.push(s(`Check ${p('Fingerstick BGL')} -- hypoglycemia is a common, reversible syncope cause.`));
+      const pulseStr = isNaN(v.pulse)?'unknown':v.pulse;
+      steps.push(s(`Assess cardiac cause: pulse is ${pulseStr} BPM. ${v.pulse<50?`BRADYCARDIA -- treat per bradycardia protocol.`:v.pulse>150?`TACHYCARDIA -- obtain 12-lead and treat per arrhythmia protocol.`:`Normal rate -- review 12-lead for blocks, QT prolongation, or ischemia.`}`));
+      steps.push(s('Vasovagal syncope: position supine and reassure. Do NOT allow patient to stand or ambulate. Transport for workup.'));
+      steps.push(s('If syncope involved a fall or head strike: apply cervical collar and full spinal precautions.'));
     }
-
-    // ORTHOPEDIC
-    if (trauma.includes('broken_limb')||trauma.includes('open_fx')) {
-        let steps = [s(`Assess neurovascular status distal to injury: pulse, sensation, motor, capillary refill. ${rp('(-Checks distal pulse-)')}`)];
-        if (trauma.includes('open_fx')) {
-            steps.push(s(`Cover exposed bone with ${p('Moist Sterile Dressing')} -- do NOT manipulate bone.`));
-            steps.push(s('Splint in position found. Gentle traction only if distal pulse is absent.'));
-            steps.push(s(`Push ${p('Ketamine 0.3-0.5 mg/kg IV')} slow push over 10 min for pain.`));
-            steps.push(s(`Infuse ${p('Cefazolin (Ancef) 2g in 100mL NS')} over 30 min. Goal: within 60 min of wound exposure.`));
-        } else {
-            steps.push(s(`Splint in position of comfort. Pad all bony prominences. ${rp('(-Splints limb-)')}`));
-            steps.push(s(`Administer ${p('Fentanyl 1 mcg/kg IV')}. Titrate to effect. Reassess in 10 min.`));
-        }
-        html += block('Orthopedic Protocol', steps);
+    if (extra.includes('wheezing')) {
+      steps.push(sl('Bronchospasm / Asthma'));
+      steps.push(s(`Position patient upright. Apply oxygen device per SpO2 reading above.`));
+      steps.push(s(`Administer ${p('Albuterol 2.5mg')} via inline nebulizer. Repeat every 20 min or run continuously in severe cases.`));
+      steps.push(s(`Administer ${p('Racemic Epinephrine (DL-Epi)')} nebulized for upper airway component or refractory lower airway bronchospasm.`));
+      steps.push(s(`Administer ${p('Methylprednisolone 125mg IV')} -- particularly if no response after 2 Albuterol treatments.`));
+      steps.push(s(`If still refractory: administer ${p('Magnesium Sulfate 2g in 100mL NS')} over 20 min per medical control.`));
+      steps.push(s('Prepare for RSI if patient fatigues, ETCO2 rises above 45, or GCS drops.'));
     }
+    html += block('Respiratory / Bronchospasm / Inhalation Protocol', steps, 'alert');
+  }
 
-    // SEIZURE
-    if (trauma.includes('seizure')) {
-        html += block('Active Seizure Protocol', [
-            s('Protect patient from injury. Clear environment. Do NOT restrain. Position on side to protect airway.'),
-            s(`First-line: ${p('Midazolam 5mg IV')} or ${p('10mg IM/IN')}. Intranasal: 0.2 mg/kg via MAD.`),
-            s(`If no IV access: ${p('Midazolam 10mg IM')} into deltoid.`),
-            s(`Seizure persists > 5 min: repeat ${p('Midazolam 5mg')} or contact medical control for ${p('Lorazepam 2mg IV')}.`),
-            s(`Check ${p('Fingerstick BGL')} -- hypoglycemia is a reversible seizure cause.`)
-        ], 'alert');
+  // 8. SVT
+  if (extra.includes('svt')&&!isArrest) {
+    html += block('SVT -- Conversion Protocol', [
+      s('Obtain 12-lead EKG. Confirm narrow-complex SVT. Do NOT give Adenosine for wide-complex tachycardia.'),
+      s(`Attempt vagal maneuver first: Modified Valsalva -- bear down hard for 15 sec, then immediately lay flat with passive leg raise for 15 sec.`),
+      s(`If no conversion: push ${p('Adenosine 6mg RAPID IV')} (1-2 sec) into antecubital vein. Immediately follow with 20mL NS rapid flush.`),
+      s(`If no response in 1-2 min: push ${p('Adenosine 12mg')} using same technique.`),
+      s(`If Afib/Flutter or Adenosine fails: administer ${p('Diltiazem 0.25 mg/kg IV')} slow push over 2 min (confirm BP > 90 first).`),
+      s('If hemodynamically UNSTABLE (hypotension, AMS, chest pain): synchronized cardioversion at 50-100J. Sedate with Midazolam 2-5mg IV first if patient is conscious.')
+    ]);
+  }
+
+  // 9. AFIB
+  if (extra.includes('afib')&&!isArrest) {
+    html += block('Atrial Fibrillation / Flutter Protocol', [
+      s('Obtain 12-lead EKG. Confirm Afib or A-Flutter. Assess hemodynamic stability.'),
+      s(`If STABLE (BP >= 90, no AMS): administer ${p('Diltiazem 0.25 mg/kg IV')} slow push over 2 min. Goal ventricular rate < 110 BPM.`),
+      s(`If UNSTABLE (BP < 90, AMS, ischemic chest pain): administer ${p('Midazolam 2-5mg IV')} for sedation, then synchronized cardioversion at 200J biphasic.`)
+    ]);
+  }
+
+  // 10. TACHYCARDIA INVESTIGATION (sinus tach not explained by SVT/Afib)
+  if (v.pulse > 120 && !e_includes('svt') && !e_includes('afib') && !isArrest) {
+    html += block(`Unexplained Tachycardia -- ${v.pulse} BPM`, [
+      s(`Heart rate is ${v.pulse} BPM without SVT or Afib selected. In emergency medicine, sinus tachycardia is a symptom -- investigate and treat the underlying cause.`),
+      s(`Common causes: ${v.bp<90?'Hypovolemia/shock (BP '+v.bp+' -- likely cause). Administer NS bolus.':''}${!isNaN(v.temp)&&v.temp>100.4?' Fever/infection (temp '+v.temp+'F -- treat with Ofirmev and investigate source).':''} Pain, hypoxia, anxiety, anemia.`),
+      s(`Check ${p('SpO2')} (${v.spo2}%), ${p('BGL')}, and 12-lead EKG to rule out ischemia or arrhythmia.`),
+      s(`If tachycardia persists after treating underlying causes and BP is stable: consider ${p('Metoprolol 5mg IV')} slow push for rate control. Hold if BP < 90 or bronchospasm.`),
+      s('Do NOT give Metoprolol if tachycardia is a compensatory response to hypotension, hypoxia, or blood loss -- doing so can cause cardiovascular collapse.')
+    ], 'alert');
+  }
+
+  // 11. CHEST PAIN / AMI
+  if (trauma.includes('chest_pain')) {
+    html += block('Cardiac Chest Pain / AMI Protocol', [
+      s(`Obtain and transmit ${p('12-lead EKG')} immediately. Note time of acquisition.`),
+      s(`Have patient CHEW ${p('Aspirin 324mg')} completely -- chewing achieves faster absorption.`),
+      s(`Administer ${p('Nitroglycerin 0.4mg SL')} every 5 min up to 3 doses. Withhold if BP < 100 or PDE-5 inhibitor use within 24-48 hours.`),
+      s(`If STEMI confirmed and PCI center > 120 min away: contact medical control regarding ${p('Tenecteplase')} fibrinolysis.`),
+      s('Continuous 12-lead monitoring throughout transport. Treat arrhythmias per ACLS protocol.')
+    ]);
+  }
+
+  // 12. STROKE WITH VAN
+  if (extra.includes('stroke')) {
+    html += block('Stroke Protocol -- Cincinnati Scale + VAN Assessment', [
+      s('Establish LAST KNOWN WELL time immediately -- this determines thrombolytic eligibility (window: < 4.5 hours).'),
+      sl('Cincinnati Stroke Scale'),
+      s('FACIAL DROOP: Ask patient to show teeth or smile. Is one side drooping or flat?'),
+      s('ARM DRIFT: Arms outstretched, palms up, eyes closed for 10 sec. Does one arm drift down or pronate?'),
+      s('SPEECH: Ask "You can\'t teach an old dog new tricks." Is speech slurred, wrong words, or absent?'),
+      s('One or more abnormal findings = 72% probability of stroke. Notify receiving hospital IMMEDIATELY.'),
+      sl('VAN Assessment -- Large Vessel Occlusion Screen'),
+      s('VISION: Sudden loss of vision, double vision, or gaze deviation to one side? Indicates LVO.'),
+      s('APHASIA: Unable to speak or understand language? Ask name and city. Expressive or receptive aphasia indicates LVO.'),
+      s('NEGLECT: Unaware of one side of body? Ignores stimuli on one side? Indicates LVO.'),
+      s('VAN POSITIVE (any 1 criterion): probable large vessel occlusion. Pre-notify for possible thrombectomy -- this may change transport destination to a thrombectomy-capable center.'),
+      sl('Supportive Care'),
+      s(`Maintain SpO2 > 94%. Apply supplemental O2 only if hypoxic -- hyperoxia worsens ischemic injury.`),
+      s(`Check ${p('Fingerstick BGL')} -- hypoglycemia mimics stroke. Treat if BGL < 60 with D10W.`),
+      s('Do NOT aggressively lower BP unless > 220/120 -- hypertension is often compensatory. Treat only per medical control.')
+    ], 'alert');
+  }
+
+  // 13. BRADYCARDIA
+  if (v.pulse>0&&v.pulse<50&&!isArrest) {
+    html += block('Symptomatic Bradycardia Protocol', [
+      s('Obtain 12-lead EKG. Identify rhythm and degree of block.'),
+      s(`Assess for hemodynamic symptoms: hypotension (BP ${v.bp}), altered mental status, diaphoresis, chest pain.`),
+      s(`Administer ${p('Atropine 0.5mg rapid IV')}. Repeat every 3-5 min to max 3mg total.`),
+      s(`If no response to Atropine: initiate ${p('Transcutaneous Pacing (TCP)')}. Set rate 60-80 BPM. Increase milliamps until electrical AND mechanical capture is confirmed (palpable pulse with each spike).`),
+      s(`Administer ${p('Midazolam 2-5mg IV')} for TCP discomfort if hemodynamics allow.`)
+    ], 'alert');
+  }
+
+  // 14. BURNS
+  if (burns.length > 0) {
+    let steps = [];
+    if (burns.includes('burn_thermal')) {
+      steps.push(sl('Thermal Burn'));
+      steps.push(s('Remove patient from heat source. Remove all non-adherent clothing and jewelry.'));
+      steps.push(s(`Cover burns with ${p('Dry Sterile Dressings')} -- do NOT use wet dressings on large burns (causes hypothermia).`));
+      steps.push(s(`Initiate ${p('NS IV')} for fluid resuscitation using the Parkland formula: 4mL x kg x % BSA burned. Give half over the first 8 hours.`));
+      steps.push(s(`Administer ${p('Ketamine 0.3-0.5 mg/kg IV')} for pain -- burns are extremely painful and fentanyl may be insufficient alone.`));
+      steps.push(s('Maintain normothermia -- burn patients lose heat rapidly. Warm IV fluids and apply thermal blanket.'));
     }
-
-    // AGITATION
-    if (extra.includes('agitation')&&!trauma.includes('seizure')) {
-        html += block('Acute Agitation / Delirium Protocol', [
-            s('Attempt verbal de-escalation first. Ensure scene safety.'),
-            s(`Administer ${p('Droperidol 2.5mg IM or IV')} over 2 min -- preferred first-line chemical sedation.`),
-            s(`If violent or imminent safety risk: administer ${p('Ketamine 4-6 mg/kg IM')} for rapid dissociative sedation.`),
-            s(`Adjunct: ${p('Midazolam 5mg IM')} if Droperidol alone is insufficient.`),
-            s('Monitor SpO2 and airway continuously after sedation.')
-        ]);
+    if (burns.includes('burn_chemical')) {
+      steps.push(sl('Chemical Burn'));
+      steps.push(s('Ensure scene safety -- wear appropriate PPE before patient contact. Remove contaminated clothing (away from airway).'));
+      steps.push(s('Irrigate affected area with copious room-temperature water for a minimum of 20-30 minutes. Do NOT neutralize chemical with another chemical.'));
+      steps.push(s('If eyes affected: continuous eye irrigation with NS. Remove contact lenses.'));
+      steps.push(s(`Administer ${p('Fentanyl 1 mcg/kg IV')} for pain. Monitor for systemic toxicity depending on chemical agent.`));
     }
-
-    // NAUSEA (Zofran)
-    if (extra.includes('nausea')&&!extra.includes('agitation')) {
-        html += block('Nausea / Vomiting Protocol', [
-            s(`Administer ${p('Ondansetron (Zofran) 4mg IV')} push over 2-5 min, or ${p('4mg ODT')} placed under tongue.`),
-            s('Position patient laterally if altered mental status or actively vomiting.'),
-            s(`Have ${p('Yankauer Suction')} immediately available.`),
-            s('Can repeat Zofran 4mg once in 30 minutes if nausea persists.')
-        ]);
+    if (burns.includes('burn_electrical')) {
+      steps.push(sl('Electrical Burn'));
+      steps.push(s('Ensure scene safety -- confirm patient is clear of electrical source before contact.'));
+      steps.push(s('Electrical burns cause more internal damage than external appearance suggests. Assume deep tissue and organ injury.'));
+      steps.push(s(`Obtain ${p('12-lead EKG')} immediately -- electrical injury causes cardiac arrhythmias including fatal VF.`));
+      steps.push(s(`Initiate ${p('NS 1-2L IV')} for fluid resuscitation and to protect kidneys from myoglobin released by muscle breakdown (rhabdomyolysis). Monitor urine color -- dark urine indicates myoglobinuria.`));
+      steps.push(s('Look for entry AND exit wounds -- both must be addressed. Internal conductance path may cause injuries not visible externally.'));
+      steps.push(s(`Administer ${p('Ketamine 0.3-0.5 mg/kg IV')} or ${p('Fentanyl 1 mcg/kg IV')} for pain management.`));
     }
-
-    // HYPOGLYCEMIA
-    if (!isNaN(v.bgl)&&v.bgl<70) {
-        html += block('Hypoglycemia Protocol', [
-            s('Confirm BGL < 70 with fingerstick.'),
-            s(`If CONSCIOUS: administer ${p('Oral Glucose 15-30g')}.`),
-            s(`If UNCONSCIOUS: infuse ${p('Dextrose 10% (D10W) 250mL')} IV wide open.`),
-            s('Recheck BGL in 15 min. Goal: BGL >= 80 mg/dL.'),
-            s(`No IV access: ${p('Glucagon 1mg IM')} into deltoid or thigh.`)
-        ], 'alert');
+    if (burns.includes('burn_inhalation')) {
+      steps.push(sl('Inhalation Burn'));
+      steps.push(s(`Apply ${p('100% NRB Mask at 15L/min')} immediately. Progressive airway edema from superheated air is the primary risk.`));
+      steps.push(s('Intubate EARLY if any signs of inhalation injury: hoarseness, stridor, singed nasal hairs, carbonaceous sputum, facial burns, soot in airway. The window for oral intubation closes rapidly as edema progresses.'));
+      steps.push(s(`RSI: ${p('Etomidate 0.3 mg/kg + Rocuronium 1.2 mg/kg')}.`));
     }
+    html += block('Burns Protocol', steps, burns.includes('burn_electrical')||burns.includes('burn_inhalation') ? 'critical' : 'alert');
+  }
 
-    // HYPERGLYCEMIA
-    if (!isNaN(v.bgl)&&v.bgl>250) {
-        html += block('Hyperglycemia / DKA Protocol', [
-            s('Confirm BGL > 250. Assess for DKA signs: Kussmaul breathing, fruity breath, altered mental status.'),
-            s(`Administer ${p('NS 1L IV bolus')} for rehydration.`),
-            s(`Administer ${p('Regular Insulin 10 Units IV')}. Confirm K+ is not critically low before administration.`),
-            s('Monitor BGL every 30 min. Target reduction: no faster than 50 mg/dL per hour.')
-        ]);
+  // 15. ORTHOPEDIC
+  if (trauma.includes('broken_limb')||trauma.includes('open_fx')) {
+    let steps = [s('Assess neurovascular status distal to injury: pulse, sensation, motor function, capillary refill.')];
+    if (trauma.includes('open_fx')) {
+      steps.push(s(`Cover exposed bone with ${p('Moist Sterile Dressing')} -- do NOT manipulate or reduce bone.`));
+      steps.push(s('Splint in position found. Apply gentle traction ONLY if distal pulse is absent.'));
+      steps.push(s(`Administer ${p('Ketamine 0.3-0.5 mg/kg IV')} slow push over 10 min for severe pain.`));
+      steps.push(s(`Infuse ${p('Cefazolin (Ancef) 2g in 100mL NS')} over 30 min. Goal: within 60 min of wound exposure.`));
+    } else {
+      steps.push(s('Splint in position of comfort. Pad all bony prominences.'));
+      steps.push(s(`Administer ${p('Fentanyl 1 mcg/kg IV')}. Titrate to effect. Reassess pain at 10 min.`));
     }
+    html += block('Orthopedic Protocol', steps);
+  }
 
-    // FEVER
-    if ((!isNaN(v.temp)&&v.temp>100.4)||extra.includes('fever')) {
-        html += block('Fever Management Protocol', [
-            s('Confirm temperature. Remove excess clothing and blankets.'),
-            s(`Administer ${p('IV Acetaminophen (Ofirmev) 1000mg')} in 100mL over 15 minutes.`),
-            s('Apply cool damp cloths to forehead and axillae. Do NOT use ice baths -- shivering increases core temperature.'),
-            s('If temp > 104F: initiate active cooling. Sepsis workup at receiving facility.')
-        ]);
-    }
+  // 16. SEIZURE
+  if (trauma.includes('seizure')) {
+    html += block('Active Seizure Protocol', [
+      s('Protect patient from environmental injury. Clear the area. Do NOT restrain the patient.'),
+      s('Position on side to protect airway if possible -- prevents aspiration.'),
+      s(`First-line: ${p('Midazolam 5mg IV')} or ${p('10mg IM/IN')} (0.2 mg/kg intranasal via MAD device).`),
+      s(`If no IV access: ${p('Midazolam 10mg IM')} into the deltoid muscle.`),
+      s(`Seizure persists > 5 min after first dose: repeat ${p('Midazolam 5mg IV')} or contact medical control for ${p('Lorazepam 2mg IV')}.`),
+      s(`Check ${p('Fingerstick BGL')} immediately -- hypoglycemia is a reversible, treatable seizure cause.`),
+      s('Monitor airway and respiratory rate closely. Repeated benzodiazepine doses cause respiratory depression. Have BVM immediately available.')
+    ], 'alert');
+  }
 
-    if (!html) {
-        html = `<div class="output-idle"><p>No specific protocols triggered. Verify assessment selections and vital signs.</p></div>`;
-    }
+  // 17. ALTERED LOC
+  if (extra.includes('altered_loc')) {
+    html += block('Altered Level of Consciousness Protocol', [
+      s(`Check ${p('Fingerstick BGL')} immediately. Hypoglycemia is the most common reversible cause of altered LOC -- treat if BGL < 70 with D10W.`),
+      s('Assess AVPU: Alert, Voice, Pain, Unresponsive. Perform GCS. If GCS < 8 -- manage airway per RSI protocol.'),
+      s('Consider AEIOU-TIPS causes: Alcohol, Epilepsy, Insulin, Overdose/Opiate, Uremia/Toxins, Trauma, Infection, Psychiatric, Stroke.'),
+      s(`If respiratory rate < 10 and opioid OD suspected: administer ${p('Naloxone 0.4-2mg IV or IN')} and titrate to adequate respirations. Avoid precipitating acute withdrawal.`),
+      s(`Protect airway. Position in recovery position if no c-spine concern. Prepare for intubation if GCS deteriorates below 8.`),
+      s('Obtain 12-lead EKG -- cardiac arrhythmias and STEMI can cause altered LOC.')
+    ], 'alert');
+  }
 
-    // MEDICATION TABLE
-    const applicable = MEDICATIONS.filter(med => {
-        try { return med.condition(v, trauma, resp, extra); } catch(e) { return false; }
-    });
+  // 18. AGITATION
+  if (extra.includes('agitation')&&!trauma.includes('seizure')) {
+    html += block('Acute Agitation / Delirium Protocol', [
+      s('Attempt verbal de-escalation first. Ensure scene safety -- position yourself between patient and exit.'),
+      s(`Administer ${p('Droperidol 2.5mg IM or IV')} over 2 min -- first-line chemical sedation for acute agitation.`),
+      s(`If violent or immediate safety threat: administer ${p('Ketamine 4-6 mg/kg IM')} into the deltoid or vastus lateralis -- rapid dissociative sedation.`),
+      s(`Adjunct if needed: ${p('Midazolam 5mg IM')} to enhance sedation.`),
+      s('Monitor SpO2 and airway continuously after any chemical sedation. Have BVM immediately available.')
+    ]);
+  }
 
-    let medTableHtml = '';
-    if (applicable.length > 0) {
-        const rows = applicable.map(med => {
-            let reasonText = '';
-            try { reasonText = med.reason(v, trauma, resp, extra); } catch(e) { reasonText = med.indication; }
-            return `
-            <tr class="${med.priority==='high'?'priority-high':''}">
-                <td>${med.name}</td>
-                <td class="dose-cell">${med.dose}</td>
-                <td><span class="route-badge">${med.route}</span></td>
-                <td class="notes-cell">${med.notes}</td>
-                <td class="reason-cell">${reasonText}</td>
-            </tr>`;
-        }).join('');
+  // 19. NAUSEA
+  if (extra.includes('nausea')&&!extra.includes('agitation')) {
+    html += block('Nausea / Vomiting Protocol', [
+      s(`Administer ${p('Ondansetron (Zofran) 4mg IV')} over 2-5 min, or ${p('4mg ODT')} placed under tongue.`),
+      s('Position patient laterally if altered mental status or at risk of aspiration.'),
+      s(`Have ${p('suction catheter tip')} immediately available.`),
+      s('Repeat Zofran 4mg once in 30 minutes if nausea persists.')
+    ]);
+  }
 
-        medTableHtml = `
-            <div class="med-table-wrap">
-                <div class="med-table-header">
-                    <h3>Medication Administration Plan</h3>
-                    <span class="med-count-badge">${applicable.length} Medications</span>
-                    <span class="med-legend"><span class="med-legend-dot"></span>Red rows = first-line / time-critical medications requiring immediate administration</span>
-                </div>
-                <table>
-                    <thead><tr><th>Medication</th><th>Dose</th><th>Route</th><th>Clinical Notes</th><th>Why for This Patient</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>`;
-    }
+  // 20. HYPOGLYCEMIA
+  if (!isNaN(v.bgl)&&v.bgl<70) {
+    html += block('Hypoglycemia Protocol', [
+      s(`BGL confirmed ${v.bgl} mg/dL.`),
+      s(`If CONSCIOUS and able to swallow: administer ${p('Oral Glucose 15-30g')}.`),
+      s(`If UNCONSCIOUS or unable to swallow: infuse ${p('Dextrose 10% (D10W) 250mL')} IV wide open. Preferred over D50 prehospital.`),
+      s('Recheck BGL in 15 min. Goal: BGL >= 80 mg/dL. Repeat treatment if insufficient.'),
+      s(`No IV/IO access: administer ${p('Glucagon 1mg IM')} into deltoid or thigh.`)
+    ], 'alert');
+  }
 
-    output.innerHTML = cardWrap(html + medTableHtml);
+  // 21. HYPERGLYCEMIA
+  if (!isNaN(v.bgl)&&v.bgl>250) {
+    html += block('Hyperglycemia / DKA Protocol', [
+      s(`BGL confirmed ${v.bgl} mg/dL. Assess for DKA: Kussmaul respirations, fruity breath, altered mental status, dehydration.`),
+      s(`Administer ${p('NS 1L IV bolus')} -- DKA patients are commonly 3-6 liters volume depleted.`),
+      s(`Administer ${p('Regular Insulin 10 Units IV')}. Confirm K+ is not critically low before insulin -- insulin drives K+ into cells.`),
+      s('Monitor BGL every 30 min. Do not correct faster than 50 mg/dL per hour to prevent cerebral edema.')
+    ]);
+  }
+
+  // 22. FEVER
+  if ((!isNaN(v.temp)&&v.temp>100.4)||extra.includes('fever')) {
+    html += block('Fever Management Protocol', [
+      s(`Temperature ${!isNaN(v.temp)?v.temp:'elevated'}F. Remove excess clothing.`),
+      s(`Administer ${p('IV Acetaminophen (Ofirmev) 1000mg')} in 100mL over 15 minutes.`),
+      s('Apply cool damp cloths to forehead and axillae. Do NOT use ice baths -- shivering increases metabolic demand and core temperature.'),
+      s('If temp > 104F: initiate active cooling blanket. Investigate for sepsis source at receiving facility.')
+    ]);
+  }
+
+  if (!html) {
+    html = `<div class="output-idle"><p>No specific protocols triggered. Verify assessment selections and vital signs.</p></div>`;
+  }
+
+  // MEDICATION TABLE
+  const applicable = MEDICATIONS.filter(med => {
+    try { return med.condition(v, trauma, resp, extra, burns); } catch(e) { return false; }
+  });
+
+  let medTableHtml = '';
+  if (applicable.length > 0) {
+    const rows = applicable.map(med => {
+      let reasonText = med.indication;
+      try { reasonText = med.reason(v, trauma, resp, extra); } catch(e) {}
+      return `<tr class="${med.priority==='high'?'priority-high':''}">
+        <td>${med.name}</td>
+        <td class="dose-cell">${med.dose}</td>
+        <td><span class="route-badge">${med.route}</span></td>
+        <td class="notes-cell">${med.notes}</td>
+        <td class="reason-cell">${reasonText}</td>
+      </tr>`;
+    }).join('');
+    medTableHtml = `
+      <div class="med-table-wrap">
+        <div class="med-table-header">
+          <h3>Medication Administration Plan</h3>
+          <span class="med-count-badge">${applicable.length} Medications</span>
+          <span class="med-legend"><span class="med-legend-dot"></span>Red rows = time-critical medications requiring immediate administration</span>
+        </div>
+        <table>
+          <thead><tr><th>Medication</th><th>Dose</th><th>Route</th><th>Clinical Notes</th><th>Why for This Patient</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  output.innerHTML = cardWrap(html + medTableHtml);
+}
+
+// helper to avoid ReferenceError when extra is accessed in tachycardia block
+function e_includes(val) {
+  try {
+    return Array.from(document.querySelectorAll('#extra_list input:checked')).map(i=>i.value).includes(val);
+  } catch(e2) { return false; }
 }
 </script>
 </body>
