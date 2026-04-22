@@ -8,6 +8,20 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--blue-dark:#0369a1;--blue-mid:#0ea5e9;--blue-soft:#38bdf8;--blue-light:#f0f9ff;--blue-accent:#bae6fd;--blue-tint:#e0f2fe;--white:#ffffff;--surface:#f8fafc;--text-dark:#0f172a;--text-mid:#334155;--text-gray:#64748b;--text-light:#94a3b8;--border:#e2e8f0;--border-blue:#bae6fd;--red:#dc2626;--amber:#d97706;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace}
+body.dark{--blue-light:#0b1120;--white:#111827;--surface:#1a2235;--text-dark:#e2e8f0;--text-mid:#94a3b8;--text-gray:#64748b;--text-light:#475569;--border:#1e3a5f;--border-blue:#1e3a5f;--blue-tint:rgba(14,165,233,0.1);--blue-accent:rgba(14,165,233,0.3);--blue-dark:#38bdf8;--blue-mid:#0ea5e9}
+body.dark .priority-high{background:#1f0a0a}
+body.dark .priority-high td:first-child,body.dark .priority-high .reason-cell{color:#f87171}
+body.dark thead tr{background:rgba(14,165,233,0.08)}
+body.dark tbody tr:hover{background:rgba(255,255,255,0.03)}
+body.dark .tag-std{background:rgba(14,165,233,0.15)}
+body.dark .tag-critical{background:rgba(220,38,38,0.2);color:#f87171}
+body.dark .tag-alert{background:rgba(217,119,6,0.2);color:#fbbf24}
+body.dark .error-box{background:rgba(220,38,38,0.1);border-color:rgba(220,38,38,0.3);color:#fca5a5}
+.dm-btn{display:flex;align-items:center;gap:7px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--text-gray);transition:all .15s;white-space:nowrap}
+.dm-btn:hover{border-color:var(--blue-mid);color:var(--blue-mid)}
+.dm-icon{font-size:13px;line-height:1}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.visit-counter{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text-light);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 9px;letter-spacing:0.05em}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--blue-light);color:var(--text-dark);min-height:100vh}
 .topbar{background:var(--white);border-bottom:3px solid var(--blue-mid);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(0,0,0,.06);position:sticky;top:0;z-index:100}
@@ -87,7 +101,14 @@ td:first-child{font-weight:700;color:var(--text-dark);white-space:nowrap}
     <div class="topbar-logo">M+</div>
     <div class="topbar-name">MDFR <span>Clinical Operations</span> Portal</div>
   </div>
-  <div class="topbar-badge">ALS Roleplay Guide</div>
+  <div class="topbar-right">
+    <div class="visit-counter" id="visit-counter">Visits: —</div>
+    <div class="topbar-badge">ALS Roleplay Guide</div>
+    <button class="dm-btn" id="dm-btn" onclick="toggleDark()">
+      <span class="dm-icon" id="dm-icon">🌙</span>
+      <span id="dm-label">Dark Mode</span>
+    </button>
+  </div>
 </div>
 
 <div class="container">
@@ -491,43 +512,60 @@ function generatePlan() {
   if (hasAirway) {
     let steps = [];
 
+    // STEP 1 — FLAIL CHEST STABILISATION (mechanical, before airway work)
     if (trauma.includes('flail_chest')) {
-      steps.push(sl('Flail Chest'));
-      steps.push(s(`Stabilize flail segment with large bulky dressing and tape.`));
-      steps.push(s('Provide positive pressure ventilation via BVM if respiratory failure is present. Prepare for intubation.'));
+      steps.push(sl('Step 1 — Flail Chest Stabilisation'));
+      steps.push(s('Stabilize flail segment with large bulky dressing and tape before attempting any airway maneuvers.'));
+      steps.push(s('Provide BVM-assisted ventilation if the patient is not moving adequate tidal volumes.'));
     }
-    if (burns.includes('burn_inhalation')) {
-      steps.push(sl('Inhalation Burn'));
-      steps.push(s(`Apply ${p('100% NRB Mask at 15L/min')} immediately. Inhalation injuries cause progressive airway edema — intubate EARLY before the airway closes.`));
-      steps.push(s('Signs requiring immediate RSI: hoarseness, stridor, singed nasal hairs, carbonaceous sputum, progressive swelling, increasing respiratory distress.'));
-    }
+
+    // STEP 2 — CLEAR THE AIRWAY FIRST (before any device goes in)
     if (resp.includes('blocked_airway')) {
-      steps.push(sl('Airway Obstruction'));
-      steps.push(s(`Use ${p('Suction catheter tip')} to clear blood, secretions, and soft material. Suction in 10-second intervals maximum.`));
-      steps.push(s(`Use ${p('Magill Forceps')} under direct laryngoscopy to remove solid visible objects from the oropharynx.`));
+      steps.push(sl('Step 2 — Clear the Airway'));
+      steps.push(s(`Perform jaw-thrust or head-tilt chin-lift to open the airway manually.`));
+      steps.push(s(`Use ${p('suction catheter tip')} to clear blood, secretions, and soft material. Suction in 10-second intervals maximum — do NOT exceed this or you will cause hypoxia.`));
+      steps.push(s(`Use ${p('Magill Forceps')} under direct laryngoscopy to remove any visible solid objects from the oropharynx. Confirm airway is patent before proceeding.`));
+      steps.push(s(`If airway is now clear and patient is breathing adequately: apply supplemental O2 per SpO2 and hold RSI. Reassess.`));
     }
+
+    // STEP 3 — TREAT AIRWAY EDEMA (temporise before intubating)
     if (resp.includes('airway_edema')) {
-      steps.push(sl('Swollen / Edematous Airway'));
-      steps.push(s(`Administer ${p('Racemic Epinephrine (DL-Epi)')} nebulized immediately — reduces mucosal edema via alpha-adrenergic vasoconstriction. This is a temporizing measure.`));
-      steps.push(s(`Administer ${p('Methylprednisolone 125mg IV')} and ${p('Diphenhydramine 50mg IV')} if allergic/anaphylactic cause.`));
-      steps.push(s('If edema is progressing and patient is deteriorating: proceed immediately to RSI. Awake intubation preferred if patient is cooperative — the swollen airway becomes increasingly difficult to intubate.'));
-      steps.push(s(`Backup plan if intubation fails: ${p('Surgical Cricothyrotomy')} — scalpel incision through cricothyroid membrane, insert cuffed tube. This is the definitive rescue airway.`));
+      steps.push(sl('Step 3 — Swollen / Edematous Airway (Treat Before Intubating)'));
+      steps.push(s(`Administer ${p('Racemic Epinephrine (DL-Epi)')} nebulized immediately — reduces mucosal edema via alpha-adrenergic vasoconstriction. This is a temporizing measure; it does NOT resolve the underlying cause.`));
+      steps.push(s(`Administer ${p('Methylprednisolone 125mg IV')} and ${p('Diphenhydramine 50mg IV')} if allergic or anaphylactic etiology.`));
+      steps.push(s('If edema is progressing and patient is deteriorating despite nebulised treatment: proceed to RSI below WITHOUT DELAY. The swollen airway becomes geometrically harder to intubate as edema worsens.'));
+      steps.push(s(`Backup plan if intubation fails: ${p('Surgical Cricothyrotomy')} — vertical skin incision over cricothyroid membrane, horizontal stab through membrane, insert cuffed 6.0 ET tube. This is the definitive rescue airway.`));
     }
+
+    // STEP 4 — FIX LUNG/CHEST ISSUES (decompression before positive pressure)
     if (resp.includes('coll_lung')||resp.includes('tension')) {
-      steps.push(sl('Tension Pneumothorax'));
-      steps.push(s(`Perform ${p('Needle Decompression')}: 14g angiocath at 2nd ICS mid-clavicular line OR 4th/5th ICS anterior axillary line. Listen for rush of air. Leave catheter in place.`));
-      steps.push(s('After decompression, prepare for finger thoracostomy or chest tube at receiving facility. Apply occlusive dressing to entry wound.'));
+      steps.push(sl('Step 4 — Tension Pneumothorax (Decompress BEFORE intubating)'));
+      steps.push(s('A tension pneumo MUST be decompressed before initiating positive pressure ventilation. PPV in a tension pneumo will cause immediate cardiovascular collapse.'));
+      steps.push(s(`Perform ${p('Needle Decompression')}: 14g angiocath at 2nd ICS mid-clavicular line OR 4th/5th ICS anterior axillary line. Listen for audible rush of air confirming decompression. Leave catheter in place.`));
+      steps.push(s('Reassess breath sounds and hemodynamics after decompression. If tension recurs: prepare for finger thoracostomy at receiving facility.'));
     }
+
+    // STEP 5 — INHALATION INJURY O2 (before RSI decision)
+    if (burns.includes('burn_inhalation')) {
+      steps.push(sl('Step 5 — Inhalation Burn — O2 and Early Intubation Decision'));
+      steps.push(s(`Apply ${p('100% NRB Mask at 15L/min')} immediately. Inhalation injuries cause progressive airway edema — intubate EARLY before the airway closes.`));
+      steps.push(s('Signs mandating immediate RSI: hoarseness, stridor, singed nasal hairs, carbonaceous sputum, facial burns with oropharyngeal soot, increasing respiratory distress. Do NOT wait until airway is fully obstructed.'));
+    }
+
+    // STEP 6 — ADVANCED AIRWAY (RSI) — only after airway is clear and chest is decompressed
     if (resp.includes('coll_airway')||resp.includes('unconscious')) {
-      steps.push(sl('Rapid Sequence Intubation (RSI)'));
+      steps.push(sl('Step 6 — Rapid Sequence Intubation (RSI) — Airway Clear, Chest Decompressed'));
+      steps.push(s('Confirm airway is cleared of obstructions and any tension pneumo is decompressed before proceeding.'));
       steps.push(s(`Pre-oxygenate with ${p('NRB Mask at 15L/min')} for 3 minutes. Have suction tip, backup supraglottic airway, and cricothyrotomy kit immediately available.`));
       steps.push(s(`Push ${p('Etomidate 0.3 mg/kg (~20mg) IV')} rapid push. Immediately follow with ${p('Rocuronium 1.2 mg/kg (~100mg) IV')}.`));
-      steps.push(s(`Apply cricoid pressure (Sellick maneuver). At jaw relaxation (~60 sec), visualize cords with laryngoscope and advance ${p('7.5-8.0mm ET tube')}.`));
-      steps.push(s(`Confirm placement: bilateral breath sounds + ${p('ETCO2 waveform capnography')} (target 35-45 mmHg). Secure tube and document cm depth.`));
-      steps.push(s('If intubation fails twice: insert supraglottic airway. If that fails: surgical cricothyrotomy.'));
+      steps.push(s(`Apply cricoid pressure. At jaw relaxation (~60 sec), visualize cords with laryngoscope and advance ${p('7.5-8.0mm ET tube')}.`));
+      steps.push(s(`Confirm placement: bilateral breath sounds + ${p('ETCO2 waveform capnography')} (target 35-45 mmHg). Secure tube and document cm depth at teeth.`));
+      steps.push(s('If first intubation attempt fails: ventilate with BVM, reposition, and retry. Two failed attempts: insert supraglottic airway. Supraglottic fails: surgical cricothyrotomy.'));
     }
+
+    // STEP 7 — IO ACCESS
     if (resp.includes('iv_fail')) {
-      steps.push(sl('Intraosseous (IO) Access'));
+      steps.push(sl('Step 7 — Intraosseous (IO) Access'));
       steps.push(s(`Establish ${p('EZ-IO')} at proximal tibia or humeral head. Confirm placement by aspirating marrow.`));
       steps.push(s(`In conscious patients: push ${p('2% Lidocaine 40mg IO')} before fluid infusion to reduce IO pain.`));
     }
@@ -828,6 +866,36 @@ function e_includes(val) {
     return Array.from(document.querySelectorAll('#extra_list input:checked')).map(i=>i.value).includes(val);
   } catch(e2) { return false; }
 }
+
+// ---- DARK MODE ----
+function toggleDark() {
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('als_darkmode', isDark ? '1' : '0');
+  document.getElementById('dm-icon').textContent  = isDark ? '☀️' : '🌙';
+  document.getElementById('dm-label').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+}
+
+// ---- VISIT COUNTER ----
+function initVisitCounter() {
+  try {
+    const key = 'als_visit_count';
+    const prev = parseInt(localStorage.getItem(key) || '0', 10);
+    const next = prev + 1;
+    localStorage.setItem(key, next);
+    const el = document.getElementById('visit-counter');
+    if (el) el.textContent = 'Visits: ' + next.toLocaleString();
+  } catch(e) {}
+}
+
+// ---- INIT ON LOAD ----
+(function init() {
+  if (localStorage.getItem('als_darkmode') === '1') {
+    document.body.classList.add('dark');
+    document.getElementById('dm-icon').textContent  = '☀️';
+    document.getElementById('dm-label').textContent = 'Light Mode';
+  }
+  initVisitCounter();
+})();
 </script>
 </body>
 </html>
